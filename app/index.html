@@ -5,104 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign In</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<!-- ✅ FingerprintJS -->
-<script async src="https://openfpcdn.io/fingerprintjs/v4"></script>
-
 <style>
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #fff;
-    color: #000;
-  }
-  .container {
-    max-width: 400px;
-    margin: auto;
-    padding: 20px;
-  }
-  h1 {
-    font-size: 32px;
-    margin-bottom: 25px;
-  }
-  label {
-    font-size: 14px;
-    margin-bottom: 6px;
-    display: block;
-    color: #333;
-  }
-  .input-group {
-    position: relative;
-    margin-bottom: 20px;
-  }
-  .input-group i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #c70404;
-  }
-  .input-group input {
-    width: 100%;
-    padding: 12px 40px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: #f9f9f9;
-    color: #000;
-    font-size: 14px;
-    box-sizing: border-box;
-  }
-  .btn {
-    padding: 14px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    margin-bottom: 15px;
-    box-sizing: border-box;
-  }
-  .btn-signin {
-    background: #01009C;
-    color: #fff;
-    font-weight: bold;
-    flex: 1;
-    margin-right: 10px;
-  }
-  .btn-contact, .btn-create {
-    background: #eee;
-    color: #000;
-    border: 1px solid #ccc;
-    width: 100%;
-  }
-  .signup-text {
-    text-align: center;
-    font-size: 14px;
-    margin: 20px 0 10px;
-    color: #333;
-    cursor: pointer;
-  }
-  .btn-row {
-    display: flex;
-    align-items: center;
-  }
-  .btn-fingerprint {
-    background: #eee;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 54px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    cursor: pointer;
-  }
+  body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; }
+  .container { max-width:400px; margin:auto; padding:20px; }
+  h1 { font-size:32px; margin-bottom:25px; }
+  label { font-size:14px; margin-bottom:6px; display:block; color:#333; }
+  .input-group { position:relative; margin-bottom:20px; }
+  .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#c70404; }
+  .input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
+  .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; margin-bottom:15px; box-sizing:border-box; }
+  .btn-signin { background:#01009C; color:#fff; font-weight:bold; flex:1; margin-right:10px; }
+  .btn-contact { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
+  .btn-create { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
+  .signup-text { text-align:center; font-size:14px; margin:20px 0 10px; color:#333; cursor:pointer; }
+  #responseBox { font-size:14px; margin-top:15px; padding:10px; border-radius:6px; background:#f4f4f4; color:#333; display:none; }
+  .btn-row { display:flex; align-items:center; }
+  .btn-fingerprint { background:#eee; border:1px solid #ccc; border-radius:8px; width:54px; height:44px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; display:none; }
 </style>
 </head>
 <body>
 <div class="container" id="loginContainer">
   <h1>Sign in</h1>
+  <div id="responseBox"></div>
+  <br/>
   <label for="email">Email</label>
   <div class="input-group">
     <i class="fa fa-envelope"></i>
@@ -116,8 +41,9 @@
   <div class="forgot-pass" onclick="window.location.href='forget.html'">Forgot password</div>
   <br/>
 
+  <!-- Sign In + Fingerprint Row -->
   <div class="btn-row">
-    <button class="btn btn-signin" id="loginBtn" onclick="loginUser()">Sign in</button>
+    <button class="btn btn-signin" onclick="loginUser()">Sign in</button>
     <div class="btn-fingerprint" id="fingerBtn" onclick="callFingerprint()">
       <i class="fa fa-fingerprint"></i>
     </div>
@@ -125,40 +51,10 @@
 
   <button class="btn btn-contact">Contact us</button>
   <div class="signup-text" onclick="window.location.href='create.html'">Sign up if you do not have an account with us</div>
-  <button class="btn btn-create" onclick="window.location.href='create-account'">Create a free account</button>
+  <button class="btn btn-create" onclick="window.location.href='create.html'">Create a free account</button>
 </div>
 
 <script>
-// ✅ Toastify Helper
-function showToast(message, color="#01009C", icon="fa-solid fa-circle-info") {
-  Toastify({
-    text: `<i class="${icon}"></i> ${message}`,
-    duration: 3000,
-    gravity: "top",
-    position: "center",
-    close: true,
-    escapeMarkup: false,
-    style: {
-      background: color,
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px"
-    }
-  }).showToast();
-}
-
-// ✅ FingerprintJS Init
-let fpPromise = FingerprintJS.load();
-
-// ✅ Device Fingerprint
-async function getDeviceFingerprint() {
-  const fp = await fpPromise;
-  const result = await fp.get();
-  return result.visitorId;
-}
-
-// ✅ On Page Load
 window.onload = function() {
   const fingerprintEnabled = localStorage.getItem("fingerprintEnabled");
   const user = localStorage.getItem("user");
@@ -166,104 +62,96 @@ window.onload = function() {
   const emailField = document.getElementById("username");
 
   if (fingerprintEnabled === "true") {
+    // ✅ Show fingerprint button
     fingerBtn.style.display = "flex";
+
+    // ✅ Prefill email if saved
     try {
       const parsedUser = JSON.parse(user);
-      if (parsedUser && parsedUser.email) emailField.value = parsedUser.email;
+      if (parsedUser && parsedUser.email) {
+        emailField.value = parsedUser.email;
+      }
     } catch(e) {}
   } else {
+    // ✅ First visit → hide fingerprint
     fingerBtn.style.display = "none";
   }
 };
 
-// ✅ Login User
-async function loginUser() {
+function loginUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  const loginBtn = document.getElementById("loginBtn");
+  const responseBox = document.getElementById("responseBox");
 
   if (!username || !password) {
-    showToast("Please enter both username and password.", "#c70404", "fa-solid fa-exclamation-circle");
+    responseBox.style.display="block";
+    responseBox.style.color="red";
+    responseBox.textContent="Please enter both username and password.";
     return;
   }
 
-  loginBtn.textContent = "Logging...";
-  loginBtn.disabled = true;
-
-  const fingerprint = await getDeviceFingerprint();
+  responseBox.style.display="block";
+  responseBox.style.color="#333";
+  responseBox.textContent="⏳ Logging in...";
 
   fetch("https://datapaddy.com.ng/api/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json","Accept": "application/json"},
-    body: JSON.stringify({ login: username, password: password, fingerprint })
+    method:"POST",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify({login:username,password:password})
   })
-  .then(res => res.json())
-  .then(data => {
-    if (data.status) {
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("fingerprintEnabled", "true");
-      showToast("Welcome back, Chief 👑", "#00C853", "fa-solid fa-check-circle");
-      setTimeout(() => { window.location.href = "dashboard"; }, 1500);
+  .then(res=>res.json())
+  .then(data=>{
+    responseBox.style.display="block";
+    responseBox.textContent=data.message||"Unknown response";
+    if(data.status){
+      localStorage.setItem("token",data.token);
+      localStorage.setItem("user",JSON.stringify(data.user));
+      localStorage.setItem("fingerprintEnabled","true");
+
+      if (typeof Android !== "undefined" && Android.setFingerprintEnabled) {
+        Android.setFingerprintEnabled(true);
+      }
+
+      if(typeof NativeNotify!=="undefined") {
+        NativeNotify.showNotification("Datapaddy","Welcome Back, Chief");
+      }
+
+      setTimeout(()=>{ window.location.href="home.html"; },1500);
     } else {
-      showToast(data.message || "Invalid login details.", "#c70404", "fa-solid fa-times-circle");
+      responseBox.style.color="red";
     }
   })
-  .catch(err => {
-    showToast("Error: " + err.message, "#c70404", "fa-solid fa-bug");
-  })
-  .finally(() => {
-    loginBtn.textContent = "Sign in";
-    loginBtn.disabled = false;
+  .catch(err=>{
+    responseBox.style.color="red";
+    responseBox.textContent="Error: "+err;
   });
 }
 
-// ✅ Fingerprint Quick Login (on-device biometrics)
-async function callFingerprint() {
-  try {
-    if (!window.PublicKeyCredential) {
-      showToast("Biometric authentication not supported on this device.", "#c70404", "fa-solid fa-ban");
-      return;
-    }
-
-    // Trigger native fingerprint or face prompt
-    await navigator.credentials.get({
-      publicKey: {
-        challenge: new Uint8Array(32),
-        timeout: 60000,
-        userVerification: "required"
-      }
-    });
-
-    const fingerprint = await getDeviceFingerprint();
-    const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-    if (fingerprint && savedUser.email) {
-      showToast("Fingerprint verified ✅ Logging in...", "#00C853", "fa-solid fa-fingerprint");
-      setTimeout(() => { window.location.href = "dashboard"; }, 1000);
-    } else {
-      showToast("No saved user found. Please login first.", "#c70404", "fa-solid fa-exclamation-triangle");
-    }
-
-  } catch (err) {
-    showToast("Fingerprint verification cancelled or failed.", "#c70404", "fa-solid fa-times-circle");
+function callFingerprint() {
+  if (typeof Android !== "undefined" && Android.triggerFingerprint) {
+    Android.triggerFingerprint();
   }
 }
 
-// ✅ Block Inspect / Copy / Paste
-document.addEventListener('contextmenu', e => e.preventDefault());
-['copy', 'cut', 'paste', 'selectstart'].forEach(evt => document.addEventListener(evt, e => e.preventDefault()));
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey && ['u', 's', 'a'].includes(e.key)) e.preventDefault();
-});
+// disable inspect
+document.addEventListener('contextmenu',e=>e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault()));
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&['u','s','a'].includes(e.key))e.preventDefault();});
 
-// ✅ Connection Check
-function checkConnection() {
-  if (!navigator.onLine) window.location.href = "connection.html";
-}
-window.addEventListener("load", checkConnection);
-window.addEventListener("online", checkConnection);
-window.addEventListener("offline", checkConnection);
+// connection check
+function checkConnection(){ if(!navigator.onLine) window.location.href="connection.html"; }
+window.addEventListener("load",checkConnection);
+window.addEventListener("online",checkConnection);
+window.addEventListener("offline",checkConnection);
+
+// native click sounds
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("button, .forgot-pass, .signup-text").forEach(el=>{
+    el.addEventListener("click",()=>{
+      if(typeof NativeSound!=="undefined"&&NativeSound.playClick) NativeSound.playClick();
+    });
+  });
+});
 </script>
 </body>
 </html>
