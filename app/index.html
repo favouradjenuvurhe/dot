@@ -1,1 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; }
+  .container { max-width:400px; margin:auto; padding:20px; }
+  h1 { font-size:32px; margin-bottom:25px; }
+  label { font-size:14px; margin-bottom:6px; display:block; color:#333; }
+  .input-group { position:relative; margin-bottom:20px; }
+  .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#c70404; }
+  .input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
+  .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; margin-bottom:15px; box-sizing:border-box; }
+  .btn-signin { background:#01009C; color:#fff; font-weight:bold; flex:1; margin-right:10px; }
+  .btn-contact { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
+  .btn-create { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
+  .signup-text { text-align:center; font-size:14px; margin:20px 0 10px; color:#333; cursor:pointer; }
+  #responseBox { font-size:14px; margin-top:15px; padding:10px; border-radius:6px; background:#f4f4f4; color:#333; display:none; }
+  .btn-row { display:flex; align-items:center; }
+  .btn-fingerprint { background:#eee; border:1px solid #ccc; border-radius:8px; width:54px; height:44px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; display:none; }
+</style>
+</head>
+<body>
+<div class="container" id="loginContainer">
+  <h1>Sign in</h1>
+  <div id="responseBox"></div>
+  <br/>
+  <label for="email">Email</label>
+  <div class="input-group">
+    <i class="fa fa-envelope"></i>
+    <input type="text" id="username" placeholder="you@example.com">
+  </div>
+  <label for="password">Password</label>
+  <div class="input-group">
+    <i class="fa fa-lock"></i>
+    <input type="password" id="password" placeholder="********">
+  </div>
+  <div class="forgot-pass" onclick="window.location.href='forget.html'">Forgot password</div>
+  <br/>
 
+  <!-- Sign In + Fingerprint Row -->
+  <div class="btn-row">
+    <button class="btn btn-signin" onclick="loginUser()">Sign in</button>
+    <div class="btn-fingerprint" id="fingerBtn" onclick="callFingerprint()">
+      <i class="fa fa-fingerprint"></i>
+    </div>
+  </div>
+
+  <button class="btn btn-contact">Contact us</button>
+  <div class="signup-text" onclick="window.location.href='create.html'">Sign up if you do not have an account with us</div>
+  <button class="btn btn-create" onclick="window.location.href='create.html'">Create a free account</button>
+</div>
+
+<script>
+window.onload = function() {
+  const fingerprintEnabled = localStorage.getItem("fingerprintEnabled");
+  const user = localStorage.getItem("user");
+  const fingerBtn = document.getElementById("fingerBtn");
+  const emailField = document.getElementById("username");
+
+  if (fingerprintEnabled === "true") {
+    // ✅ Show fingerprint button
+    fingerBtn.style.display = "flex";
+
+    // ✅ Prefill email if saved
+    try {
+      const parsedUser = JSON.parse(user);
+      if (parsedUser && parsedUser.email) {
+        emailField.value = parsedUser.email;
+      }
+    } catch(e) {}
+  } else {
+    // ✅ First visit → hide fingerprint
+    fingerBtn.style.display = "none";
+  }
+};
+
+function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const responseBox = document.getElementById("responseBox");
+
+  if (!username || !password) {
+    responseBox.style.display="block";
+    responseBox.style.color="red";
+    responseBox.textContent="Please enter both username and password.";
+    return;
+  }
+
+  responseBox.style.display="block";
+  responseBox.style.color="#333";
+  responseBox.textContent="⏳ Logging in...";
+
+  fetch("https://datapaddy.com.ng/api/login", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify({login:username,password:password})
+  })
+  .then(res=>res.json())
+  .then(data=>{
+    responseBox.style.display="block";
+    responseBox.textContent=data.message||"Unknown response";
+    if(data.status){
+      localStorage.setItem("token",data.token);
+      localStorage.setItem("user",JSON.stringify(data.user));
+      localStorage.setItem("fingerprintEnabled","true");
+
+      if (typeof Android !== "undefined" && Android.setFingerprintEnabled) {
+        Android.setFingerprintEnabled(true);
+      }
+
+      if(typeof NativeNotify!=="undefined") {
+        NativeNotify.showNotification("Datapaddy","Welcome Back, Chief");
+      }
+
+      setTimeout(()=>{ window.location.href="dashboard"; },1500);
+    } else {
+      responseBox.style.color="red";
+    }
+  })
+  .catch(err=>{
+    responseBox.style.color="red";
+    responseBox.textContent="Error: "+err;
+  });
+}
+
+function callFingerprint() {
+  if (typeof Android !== "undefined" && Android.triggerFingerprint) {
+    Android.triggerFingerprint();
+  }
+}
+
+// disable inspect
+document.addEventListener('contextmenu',e=>e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault()));
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&['u','s','a'].includes(e.key))e.preventDefault();});
+
+// connection check
+function checkConnection(){ if(!navigator.onLine) window.location.href="connection.html"; }
+window.addEventListener("load",checkConnection);
+window.addEventListener("online",checkConnection);
+window.addEventListener("offline",checkConnection);
+
+// native click sounds
+document.addEventListener("DOMContentLoaded",()=>{
+  document.querySelectorAll("button, .forgot-pass, .signup-text").forEach(el=>{
+    el.addEventListener("click",()=>{
+      if(typeof NativeSound!=="undefined"&&NativeSound.playClick) NativeSound.playClick();
+    });
+  });
+});
+</script>
+</body>
+  </html>
