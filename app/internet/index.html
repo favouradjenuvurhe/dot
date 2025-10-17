@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>No Internet Connection</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  body { background: #ffffff; }
+  .fade-in { animation: fadein 0.6s ease-in-out; }
+  @keyframes fadein {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body class="min-h-screen flex items-center justify-center font-sans text-center bg-white">
+
+  <!-- ⚡ No Internet Section -->
+  <div id="noInternet" class="fade-in flex flex-col items-center justify-center">
+    <img src="https://cdn-icons-png.flaticon.com/512/2748/2748558.png"
+         alt="No Internet" class="w-28 h-28 mb-4 opacity-90 mx-auto">
+    <h2 class="text-xl font-semibold text-gray-800">No Internet Connection</h2>
+    <p class="text-sm text-gray-500 mt-1 mb-5 max-w-xs mx-auto">Please check your network and try again.</p>
+    <button id="retryBtn"
+            class="bg-[#c70404] text-white px-6 py-2 rounded-lg flex items-center justify-center space-x-2 mx-auto shadow-md">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span>Retry</span>
+    </button>
+  </div>
+
+  <!-- ⚡ Connected Message (Hidden) -->
+  <div id="connected" class="hidden fade-in flex flex-col items-center justify-center">
+    <img src="https://cdn-icons-png.flaticon.com/512/4144/4144795.png"
+         alt="Connected" class="w-24 h-24 mb-4 opacity-90 mx-auto">
+    <h2 class="text-lg font-semibold text-gray-800">Connected!</h2>
+    <p class="text-sm text-gray-500 mb-3 max-w-xs mx-auto"> </p>
+    <div class="loader border-2 border-t-2 border-gray-300 border-t-[#c70404] rounded-full w-8 h-8 mx-auto animate-spin"></div>
+  </div>
+
+<script>
+if (window.lucide) lucide.createIcons();
+
+const noInternet = document.getElementById("noInternet");
+const connected = document.getElementById("connected");
+const retryBtn = document.getElementById("retryBtn");
+
+// Function to check internet
+function checkConnection() {
+  if (navigator.onLine) {
+    noInternet.classList.add("hidden");
+    connected.classList.remove("hidden");
+    setTimeout(() => {
+      window.location.href = "/app/dashboard";
+    }, 1500);
+  } else {
+    noInternet.classList.remove("hidden");
+    connected.classList.add("hidden");
+  }
+}
+
+// Retry button click
+retryBtn.addEventListener("click", () => {
+  retryBtn.classList.add("opacity-60", "cursor-wait");
+  retryBtn.disabled = true;
+  setTimeout(() => {
+    checkConnection();
+    retryBtn.classList.remove("opacity-60", "cursor-wait");
+    retryBtn.disabled = false;
+  }, 1000);
+});
+
+// Auto check every 3 seconds
+setInterval(checkConnection, 3000);
+
+// Initial check
+checkConnection();
+</script>
+</body>
+</html>
