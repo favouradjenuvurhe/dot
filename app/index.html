@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sign In</title>
+
+<!-- FontAwesome & Toastify -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
   body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; }
   .container { max-width:400px; margin:auto; padding:20px; }
@@ -13,144 +19,120 @@
   .input-group { position:relative; margin-bottom:20px; }
   .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#c70404; }
   .input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
-  .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; margin-bottom:15px; box-sizing:border-box; }
-  .btn-signin { background:#01009C; color:#fff; font-weight:bold; flex:1; margin-right:10px; }
-  .btn-contact { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
-  .btn-create { background:#eee; color:#000; border:1px solid #ccc; width:100%; }
-  .signup-text { text-align:center; font-size:14px; margin:20px 0 10px; color:#333; cursor:pointer; }
-  #responseBox { font-size:14px; margin-top:15px; padding:10px; border-radius:6px; background:#f4f4f4; color:#333; display:none; }
-  .btn-row { display:flex; align-items:center; }
-  .btn-fingerprint { background:#eee; border:1px solid #ccc; border-radius:8px; width:54px; height:44px; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; display:none; }
+  .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; box-sizing:border-box; width:100%; margin-bottom:10px; }
+  .btn-signin { background:#01009C; color:#fff; font-weight:bold; }
+  .btn-contact, .btn-create { background:#eee; color:#000; border:1px solid #ccc; }
+  .signup-text { text-align:center; font-size:14px; margin:15px 0 10px; color:#333; cursor:pointer; }
 </style>
 </head>
+
 <body>
 <div class="container" id="loginContainer">
   <h1>Sign in</h1>
-  <div id="responseBox"></div>
-  <br/>
+  
   <label for="email">Email</label>
   <div class="input-group">
     <i class="fa fa-envelope"></i>
     <input type="text" id="username" placeholder="you@example.com">
   </div>
+
   <label for="password">Password</label>
   <div class="input-group">
     <i class="fa fa-lock"></i>
     <input type="password" id="password" placeholder="********">
   </div>
-  <div class="forgot-pass" onclick="window.location.href='forget.html'">Forgot password</div>
-  <br/>
 
-  <!-- Sign In + Fingerprint Row -->
-  <div class="btn-row">
-    <button class="btn btn-signin" onclick="loginUser()">Sign in</button>
-    <div class="btn-fingerprint" id="fingerBtn" onclick="callFingerprint()">
-      <i class="fa fa-fingerprint"></i>
-    </div>
-  </div>
+  <div class="forgot-pass" onclick="window.location.href='forget.html'" style="color:#01009C; font-size:13px; cursor:pointer;">Forgot password?</div>
+  <br>
 
-  <button class="btn btn-contact">Contact us</button>
+  <button class="btn btn-signin" onclick="loginUser()">Sign in</button>
+  <button class="btn btn-contact" onclick="window.location.href='contact.html'">Contact us</button>
   <div class="signup-text" onclick="window.location.href='create.html'">Sign up if you do not have an account with us</div>
   <button class="btn btn-create" onclick="window.location.href='create.html'">Create a free account</button>
 </div>
 
 <script>
-window.onload = function() {
-  const fingerprintEnabled = localStorage.getItem("fingerprintEnabled");
-  const user = localStorage.getItem("user");
-  const fingerBtn = document.getElementById("fingerBtn");
-  const emailField = document.getElementById("username");
+if (window.lucide) lucide.createIcons();
 
-  if (fingerprintEnabled === "true") {
-    // ✅ Show fingerprint button
-    fingerBtn.style.display = "flex";
-
-    // ✅ Prefill email if saved
-    try {
-      const parsedUser = JSON.parse(user);
-      if (parsedUser && parsedUser.email) {
-        emailField.value = parsedUser.email;
-      }
-    } catch(e) {}
-  } else {
-    // ✅ First visit → hide fingerprint
-    fingerBtn.style.display = "none";
+// ✅ Redirect immediately if already logged in
+document.addEventListener("DOMContentLoaded", () => {
+  const existingToken = localStorage.getItem("token");
+  if (existingToken) {
+    window.location.replace("/app/dashboard");
+    return;
   }
-};
+});
 
+// ✅ Toastify function
+function showToast(message, type = "info") {
+  let bgColor = "#333";
+  let icon = "info";
+  if (type === "success") { bgColor = "#16a34a"; icon = "check-circle"; }
+  if (type === "error") { bgColor = "#dc2626"; icon = "alert-circle"; }
+  if (type === "info") { bgColor = "#2563eb"; icon = "info"; }
+
+  const el = document.createElement("div");
+  el.className = "flex items-center space-x-2 text-white";
+  el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i><span>${message}</span>`;
+  if (window.lucide) lucide.createIcons({ icons: [icon] });
+
+  Toastify({
+    node: el,
+    duration: 3000,
+    gravity: "top",
+    position: "center",
+    close: false,
+    stopOnFocus: true,
+    style: {
+      background: bgColor,
+      borderRadius: "10px",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+      padding: "10px 16px"
+    }
+  }).showToast();
+}
+
+// ✅ Login Function
 function loginUser() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
-  const responseBox = document.getElementById("responseBox");
 
-  if (!username || !password) {
-    responseBox.style.display="block";
-    responseBox.style.color="red";
-    responseBox.textContent="Please enter both username and password.";
+  if (!navigator.onLine) {
+    showToast("No Internet Connection", "error");
     return;
   }
 
-  responseBox.style.display="block";
-  responseBox.style.color="#333";
-  responseBox.textContent="⏳ Logging in...";
+  if (!username || !password) {
+    showToast("Please enter both username and password.", "error");
+    return;
+  }
+
+  showToast("Logging in...", "info");
 
   fetch("https://datapaddy.com.ng/api/login", {
-    method:"POST",
-    headers:{"Content-Type":"application/json","Accept":"application/json"},
-    body:JSON.stringify({login:username,password:password})
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Accept": "application/json"},
+    body: JSON.stringify({login: username, password: password})
   })
-  .then(res=>res.json())
-  .then(data=>{
-    responseBox.style.display="block";
-    responseBox.textContent=data.message||"Unknown response";
-    if(data.status){
-      localStorage.setItem("token",data.token);
-      localStorage.setItem("user",JSON.stringify(data.user));
-      localStorage.setItem("fingerprintEnabled","true");
-
-      if (typeof Android !== "undefined" && Android.setFingerprintEnabled) {
-        Android.setFingerprintEnabled(true);
-      }
-
-      if(typeof NativeNotify!=="undefined") {
-        NativeNotify.showNotification("Datapaddy","Welcome Back, Chief");
-      }
-
-      setTimeout(()=>{ window.location.href="home.html"; },1500);
+  .then(res => res.json())
+  .then(data => {
+    if (data.status) {
+      showToast("Welcome Back!", "success");
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setTimeout(() => window.location.href = "/app/dashboard", 800);
     } else {
-      responseBox.style.color="red";
+      showToast(data.message || "Login failed.", "error");
     }
   })
-  .catch(err=>{
-    responseBox.style.color="red";
-    responseBox.textContent="Error: "+err;
-  });
+  .catch(err => showToast("Error: " + err.message, "error"));
 }
 
-function callFingerprint() {
-  if (typeof Android !== "undefined" && Android.triggerFingerprint) {
-    Android.triggerFingerprint();
-  }
-}
-
-// disable inspect
-document.addEventListener('contextmenu',e=>e.preventDefault());
-['copy','cut','paste','selectstart'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault()));
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&['u','s','a'].includes(e.key))e.preventDefault();});
-
-// connection check
-function checkConnection(){ if(!navigator.onLine) window.location.href="connection.html"; }
-window.addEventListener("load",checkConnection);
-window.addEventListener("online",checkConnection);
-window.addEventListener("offline",checkConnection);
-
-// native click sounds
-document.addEventListener("DOMContentLoaded",()=>{
-  document.querySelectorAll("button, .forgot-pass, .signup-text").forEach(el=>{
-    el.addEventListener("click",()=>{
-      if(typeof NativeSound!=="undefined"&&NativeSound.playClick) NativeSound.playClick();
-    });
-  });
+// Disable inspect / copy
+document.addEventListener('contextmenu', e => e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt => document.addEventListener(evt, e => e.preventDefault()));
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && ['u','s','a'].includes(e.key.toLowerCase())) e.preventDefault();
 });
 </script>
 </body>
