@@ -7,6 +7,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<!-- ✅ FingerprintJS Library -->
+<script async src="https://openfpcdn.io/fingerprintjs/v4"></script>
+
 <style>
   body {
     margin: 0;
@@ -113,7 +116,6 @@
   <div class="forgot-pass" onclick="window.location.href='forget.html'">Forgot password</div>
   <br/>
 
-  <!-- Sign In + Fingerprint Row -->
   <div class="btn-row">
     <button class="btn btn-signin" id="loginBtn" onclick="loginUser()">Sign in</button>
     <div class="btn-fingerprint" id="fingerBtn" onclick="callFingerprint()">
@@ -127,18 +129,33 @@
 </div>
 
 <script>
-// ✅ Browser Fingerprint Generator
+// ✅ Toastify Helper
+function showToast(message, color="#01009C", icon="fa-solid fa-circle-info") {
+  Toastify({
+    text: `<i class="${icon}"></i> ${message}`,
+    duration: 3000,
+    gravity: "top",
+    position: "center",
+    close: true,
+    escapeMarkup: false,
+    style: {
+      background: color,
+      borderRadius: "12px",
+      display: "flex",
+      alignItems: "center",
+      gap: "10px"
+    }
+  }).showToast();
+}
+
+// ✅ Load FingerprintJS
+let fpPromise = FingerprintJS.load();
+
+// ✅ Get Fingerprint ID
 async function getDeviceFingerprint() {
-  const data = [
-    navigator.userAgent,
-    navigator.language,
-    screen.width,
-    screen.height,
-    navigator.hardwareConcurrency,
-    navigator.platform
-  ].join('-');
-  const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
-  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const fp = await fpPromise;
+  const result = await fp.get();
+  return result.visitorId;
 }
 
 // ✅ On Page Load
@@ -158,26 +175,6 @@ window.onload = function() {
     fingerBtn.style.display = "none";
   }
 };
-
-// ✅ Toastify Helper
-function showToast(message, color="#01009C", icon="fa-solid fa-circle-info") {
-  Toastify({
-    text: ` <i class="${icon}"></i> ${message}`,
-    duration: 3000,
-    gravity: "top",
-    position: "center",
-    stopOnFocus: true,
-    close: true,
-    escapeMarkup: false,
-    style: {
-      background: color,
-      borderRadius: "12px",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px"
-    }
-  }).showToast();
-}
 
 // ✅ Login User
 async function loginUser() {
@@ -206,9 +203,7 @@ async function loginUser() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("fingerprintEnabled", "true");
-
       showToast("Welcome back, Chief 👑", "#00C853", "fa-solid fa-check-circle");
-
       setTimeout(() => { window.location.href = "dashboard"; }, 1500);
     } else {
       showToast(data.message || "Invalid login details.", "#c70404", "fa-solid fa-times-circle");
@@ -223,16 +218,34 @@ async function loginUser() {
   });
 }
 
-// ✅ Fingerprint Quick Login
+// ✅ Biometric Verification + Quick Login
 async function callFingerprint() {
-  const fingerprint = await getDeviceFingerprint();
-  const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  try {
+    // Trigger real biometric popup (WebAuthn)
+    const cred = await navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array(32),
+        allowCredentials: [],
+        timeout: 60000,
+        userVerification: "required"
+      }
+    });
 
-  if (fingerprint && savedUser.email) {
-    showToast("Fingerprint matched ✅ Logging in...", "#00C853", "fa-solid fa-fingerprint");
-    setTimeout(() => { window.location.href = "dashboard"; }, 1200);
-  } else {
-    showToast("No fingerprint data found. Please sign in normally.", "#c70404", "fa-solid fa-exclamation-triangle");
+    if (cred) {
+      const fingerprint = await getDeviceFingerprint();
+      const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      if (fingerprint && savedUser.email) {
+        showToast("Fingerprint verified ✅ Logging in...", "#00C853", "fa-solid fa-fingerprint");
+        setTimeout(() => { window.location.href = "dashboard"; }, 1000);
+      } else {
+        showToast("No saved user data found. Please login first.", "#c70404", "fa-solid fa-exclamation-triangle");
+      }
+    } else {
+      showToast("Fingerprint verification failed.", "#c70404", "fa-solid fa-times-circle");
+    }
+  } catch (err) {
+    showToast("Fingerprint verification failed or not supported.", "#c70404", "fa-solid fa-bug");
   }
 }
 
