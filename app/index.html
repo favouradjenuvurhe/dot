@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<!-- ✅ FingerprintJS Library -->
+<!-- ✅ FingerprintJS -->
 <script async src="https://openfpcdn.io/fingerprintjs/v4"></script>
 
 <style>
@@ -148,10 +148,10 @@ function showToast(message, color="#01009C", icon="fa-solid fa-circle-info") {
   }).showToast();
 }
 
-// ✅ Load FingerprintJS
+// ✅ FingerprintJS Init
 let fpPromise = FingerprintJS.load();
 
-// ✅ Get Fingerprint ID
+// ✅ Device Fingerprint
 async function getDeviceFingerprint() {
   const fp = await fpPromise;
   const result = await fp.get();
@@ -218,34 +218,35 @@ async function loginUser() {
   });
 }
 
-// ✅ Biometric Verification + Quick Login
+// ✅ Fingerprint Quick Login (on-device biometrics)
 async function callFingerprint() {
   try {
-    // Trigger real biometric popup (WebAuthn)
-    const cred = await navigator.credentials.get({
+    if (!window.PublicKeyCredential) {
+      showToast("Biometric authentication not supported on this device.", "#c70404", "fa-solid fa-ban");
+      return;
+    }
+
+    // Trigger native fingerprint or face prompt
+    await navigator.credentials.get({
       publicKey: {
         challenge: new Uint8Array(32),
-        allowCredentials: [],
         timeout: 60000,
         userVerification: "required"
       }
     });
 
-    if (cred) {
-      const fingerprint = await getDeviceFingerprint();
-      const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const fingerprint = await getDeviceFingerprint();
+    const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-      if (fingerprint && savedUser.email) {
-        showToast("Fingerprint verified ✅ Logging in...", "#00C853", "fa-solid fa-fingerprint");
-        setTimeout(() => { window.location.href = "dashboard"; }, 1000);
-      } else {
-        showToast("No saved user data found. Please login first.", "#c70404", "fa-solid fa-exclamation-triangle");
-      }
+    if (fingerprint && savedUser.email) {
+      showToast("Fingerprint verified ✅ Logging in...", "#00C853", "fa-solid fa-fingerprint");
+      setTimeout(() => { window.location.href = "dashboard"; }, 1000);
     } else {
-      showToast("Fingerprint verification failed.", "#c70404", "fa-solid fa-times-circle");
+      showToast("No saved user found. Please login first.", "#c70404", "fa-solid fa-exclamation-triangle");
     }
+
   } catch (err) {
-    showToast("Fingerprint verification failed or not supported.", "#c70404", "fa-solid fa-bug");
+    showToast("Fingerprint verification cancelled or failed.", "#c70404", "fa-solid fa-times-circle");
   }
 }
 
@@ -256,7 +257,7 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && ['u', 's', 'a'].includes(e.key)) e.preventDefault();
 });
 
-// ✅ Connection Checker
+// ✅ Connection Check
 function checkConnection() {
   if (!navigator.onLine) window.location.href = "connection.html";
 }
