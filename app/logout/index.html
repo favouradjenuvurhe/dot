@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> </title>
+<style>
+  body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; display:flex; justify-content:center; align-items:center; height:100vh; text-align:center; }
+  .message { font-size:20px; color:#c70404; }
+  .btn { margin-top:20px; padding:12px 20px; font-size:16px; border:none; border-radius:8px; background:#356cf9; color:#fff; cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="message" id="logoutMsg">Logging you out...</div>
+  <button class="btn" onclick="goHome()">Go to Home</button>
+</div>
+
+<script>
+window.onload = function() {
+  // ✅ Clear all storage
+  localStorage.clear();
+  sessionStorage.clear();
+  if (typeof Android !== "undefined" && Android.clearStorage) {
+    Android.clearStorage(); // optional: native storage clear
+  }
+
+  // ✅ Show logout notification
+  if(typeof NativeNotify !== "undefined" && NativeNotify.showNotification){
+    NativeNotify.showNotification("Datapaddy", "You have been logged out");
+  }
+
+  // ✅ Update message
+  const msg = document.getElementById("logoutMsg");
+  msg.textContent = " You have been logged out successfully";
+
+  // ✅ Redirect to login after 2 seconds
+  setTimeout(()=>{ window.location.href="/app"; }, 2000);
+};
+
+// Optional button redirect
+function goHome() {
+  window.location.href="/app";
+}
+
+// disable inspect
+document.addEventListener('contextmenu',e=>e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt=>document.addEventListener(evt,e=>e.preventDefault()));
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&['u','s','a'].includes(e.key))e.preventDefault();});
+</script>
+</body>
+</html>
