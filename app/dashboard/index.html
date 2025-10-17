@@ -1,0 +1,279 @@
+<!DOCTYPE html>          
+<html lang="en">                  
+<head>                  
+  <meta charset="UTF-8">                  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">                  
+  <title>Wallet App UI</title>                  
+  <!-- Tailwind CSS CDN -->                  
+  <script src="https://cdn.tailwindcss.com"></script>                  
+  <!-- Lucide Icons -->                  
+  <script src="https://unpkg.com/lucide@latest"></script>                  
+  <style>                  
+    html,body{background:#ffffff}                  
+    .tabbar{box-shadow: inset 0 1px 0 rgba(0,0,0,0.06)}                  
+    .icon{width:24px;height:24px;stroke-width:2}                  
+    .home-indicator{width: 134px; height: 5px; border-radius: 9999px; background: #7a7a7a; opacity:.5;}                  
+  </style>                  
+</head>                  
+<body class="bg-gray-100 font-sans min-h-screen flex flex-col">                  
+  <!-- App Wrapper -->                  
+  <div id="app" class="flex-1 flex flex-col">                    
+    <!-- Header -->                    
+    <div class="bg-[#01009C] text-[#FFFFFF] p-5 rounded-b-2xl">                  
+      </br></br>                  
+      <div class="flex justify-between items-center">                  
+        <div class="flex items-center">                  
+          <img src="https://datapaddy.com.ng/img/avatar.png" class="w-12 h-12 rounded-full bg-white p-1" alt="avatar">                  
+          <div class="ml-3">                  
+            <p class="text-sm">Good Afternoon</p>                  
+            <h4 class="font-semibold" id="userName">Favour Adjenuvurhe</h4>                  
+          </div>                  
+        </div>                  
+        <div class="flex space-x-3">                  
+          <div class="bg-white/20 p-2 rounded-full cursor-pointer" onclick="window.location.href='activity/support.html'">
+            <i data-lucide="message-circle" class="w-5 h-5"></i>
+          </div>                  
+          <div class="bg-white/20 p-2 rounded-full cursor-pointer" onclick="window.location.href='notifications.html'">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+          </div>                  
+          </br>                  
+        </div>                  
+      </div>                  
+    </div>                    
+    </br>                    
+    <!-- Balance Card -->                    
+    <div class="bg-white mx-4 -mt-8 p-4 rounded-2xl shadow">                  
+      <div class="flex items-center justify-between">                  
+        <div>                  
+          <p class="text-xs text-gray-500">Total Balance</p>                  
+          <p class="text-2xl font-bold" id="userBalance">NGN 0.00</p>                  
+          <p class="text-xs text-red-500" id="userCommission">+NGN0.00 commission</p>                  
+        </div>                  
+        <div class="flex items-center space-x-3">                  
+          <i id="toggleBalance" data-lucide="eye-off" class="w-5 h-5 text-gray-500 cursor-pointer"></i>                  
+          <button onclick="window.location.href='fund.html'" class="bg-[#c70404] text-[#FFFFFF] px-4 py-2 rounded-lg text-sm flex items-center space-x-1">                  
+            <i data-lucide="plus" class="w-4 h-4"></i>                  
+            <span>Fund</span>                  
+          </button>                  
+        </div>     
+      </div>                  
+      <div class="grid grid-cols-4 gap-2 mt-4 text-center">                    
+        <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='bank.html'">                    
+          <i data-lucide="send" class="w-6 h-6 text-[#c70404]"></i>                    
+          <span class="text-xs">Transfer</span>                    
+        </div>                      
+        <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='airtime.html'">                    
+          <i data-lucide="phone" class="w-6 h-6 text-[#c70404]"></i>                    
+          <span class="text-xs">Airtime</span>                    
+        </div>                      
+        <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='data.html'">                    
+          <i data-lucide="wifi" class="w-6 h-6 text-[#c70404]"></i>                    
+          <span class="text-xs">Data</span>                    
+        </div>                      
+        <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='more-bills.html'">                    
+          <i data-lucide="more-horizontal" class="w-6 h-6 text-[#c70404]"></i>                    
+          <span class="text-xs">More Bills</span>                    
+        </div>                    
+      </div>                    
+    </div>            
+                 
+    <!-- Banner -->                    
+    <div class="flex space-x-3 overflow-x-auto mt-3 px-4">                  
+      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+    </div>                    
+    <!-- Recent Activities -->                    
+    <div class="mt-5 px-4 mb-20">                  
+      <div class="flex justify-between items-center mb-2">                  
+        <h2 class="font-semibold text-sm">Recent Activities</h2>                  
+        <span class="text-[#c70404] text-xs">See all</span>                  
+      </div>                  
+      <div class="space-y-3" id="transactionsList"></div>                  
+    </div>                    
+    <!-- Clean iOS/Android Footer -->                    
+    <nav class="fixed bottom-0 left-0 right-0 tabbar bg-white">                  
+      <ul class="grid grid-cols-4 text-center py-2">                  
+        <li class="flex flex-col items-center">  
+          <a href="#" class="flex flex-col items-center">  
+            <i data-lucide="home" class="icon text-gray-400"></i>                  
+            <span class="text-xs mt-1 text-gray-400">Home</span>   
+          </a>  
+        </li>                  
+        <li class="flex flex-col items-center">  
+          <a href="more-bills.html" class="flex flex-col items-center">  
+            <i data-lucide="store" class="icon text-gray-400"></i>                  
+            <span class="text-xs mt-1 text-gray-400">Services</span>  
+          </a>  
+        </li>                  
+        <li class="flex flex-col items-center">  
+          <a href="transactions.html" class="flex flex-col items-center">  
+            <i data-lucide="clock" class="icon text-gray-400"></i>                  
+            <span class="text-xs mt-1 text-gray-400">History</span>  
+          </a>  
+        </li>                  
+        <li class="flex flex-col items-center">  
+          <a href="profile.html" class="flex flex-col items-center">  
+            <i data-lucide="user" class="icon text-gray-400"></i>                  
+            <span class="text-xs mt-1 text-gray-400">Profile</span>  
+          </a>  
+        </li>
+      </ul>          
+      </br>                  
+    </nav>                  
+  </div>    
+
+  <!-- Vue 3 -->                  
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>                  
+  <script>                  
+  const { createApp, onMounted, ref, watch } = Vue;                
+  createApp({    
+    setup(){    
+      const active = ref('home');    
+
+      function formatMoney(num) {  
+        return Number(num).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });  
+      }  
+
+      function getLogo(title) {  
+        const t = title.toLowerCase();  
+        if (t.includes("mtn")) return "MTN.png";  
+        if (t.includes("airtel")) return "AIRTEL.png";  
+        if (t.includes("glo")) return "GLO.png";  
+        if (t.includes("9mobile")) return "9MOBILE.png";  
+        if (t.includes("dstv")) return "DStv.png"; 
+        if (t.includes("gotv")) return "Gotv.png"; 
+        if (t.includes("startime")) return "Startime.png";
+        if (t.includes("9psb")) return "9psb.png";
+        if (t.includes("Palmpay")) return "palmpay.png";    
+        if (t.includes("payvessel")) return "payvessel.png";  
+        if (t.includes("billstack")) return "billstack.png";  
+        if (t.includes("ncwallet")) return "ncwallet.png";  
+        if (t.includes("electricity")) return "electricity.png";  
+        if (t.includes("recharge to cash") || t.includes("r2c")) return "r2c.png";  
+        return "other.png";  
+      }  
+
+      function renderUserData(data) {
+        document.getElementById("userName").textContent = data.user.firstname + " " + data.user.lastname;  
+        let balanceEl = document.getElementById("userBalance");
+        let commissionEl = document.getElementById("userCommission");
+        const hideBalance = localStorage.getItem("hideBalance") === "true";
+
+        balanceEl.textContent = hideBalance ? "NGN ****" : "NGN " + formatMoney(data.user.balance);
+        commissionEl.textContent = hideBalance ? "+NGN**** commission" : "+NGN" + formatMoney(data.user.commission) + " commission";  
+
+        const list = document.getElementById("transactionsList");          
+        list.innerHTML = "";          
+
+        if (!data.transactions || data.transactions.length === 0) {  
+          list.innerHTML = `  
+            <div class="flex flex-col items-center mt-6 px-4 text-center">        
+              <img src="https://cdn.myportfolio.com/17be4dd08c5417027a544816a909fcf8/fb2dab8c-5de5-47ba-96bc-c262ccdcdad0_rw_600.gif?h=adec1dcadf3bdfb29a908988bfeb432e" alt="No Transactions" class="w-32 h-32" />        
+              <h4 class="mt-3 font-semibold">You don’t have any Transactions</h4>        
+              <p class="text-gray-500 text-sm">Looks like you haven’t made any transactions. Once you start spending, your history will appear here.</p>        
+            </div>`;  
+        } else {  
+          data.transactions.slice(0, 5).forEach(tx => {          
+            let statusClass = "text-gray-500";          
+            if (tx.status.toLowerCase() === "completed" || tx.status.toLowerCase() === "success") statusClass = "text-green-500";          
+            else if (tx.status.toLowerCase() === "pending") statusClass = "text-yellow-500";          
+            else if (tx.status.toLowerCase() === "failed") statusClass = "text-red-500";          
+
+            const logo = getLogo(tx.details || tx.title);          
+            const div = document.createElement("div");          
+            div.className = "flex items-center bg-white p-3 rounded-xl shadow";          
+            div.innerHTML = `          
+              <img src="https://datapaddy.com.ng/img/${logo}" class="w-10 h-10 rounded-full" />          
+              <div class="ml-3 flex-1">          
+                <p class="text-sm font-medium">${tx.details || tx.title}</p>          
+                <p class="text-xs text-gray-500">${tx.created_at || tx.date}</p>          
+              </div>          
+              <div class="text-right">          
+                <p class="text-sm font-semibold">${tx.amount}</p>          
+                <p class="text-xs ${statusClass}">${tx.status}</p>          
+              </div>`;          
+            list.appendChild(div);          
+          });  
+        }  
+      }
+
+      const fetchUserDetails = async (force = false) => {  
+        const token = localStorage.getItem("token");  
+        if (!token) { window.location.href = "index.html"; return; }  
+
+        // Check localStorage cache
+        const cached = localStorage.getItem("userData");
+        const lastFetch = localStorage.getItem("lastFetchTime");
+        const now = Date.now();
+
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            renderUserData(parsed);
+          } catch (e) {}
+        }
+
+        if (!force && lastFetch && (now - lastFetch < 30000)) {
+          return; // prevent API call if less than 30s
+        }
+
+        try {  
+          const res = await fetch("https://datapaddy.com.ng/api/user/details", {  
+            method: "GET",  
+            headers: { "Authorization": "Bearer " + token, "Accept": "application/json" }  
+          });  
+          const data = await res.json();  
+          if (data.status) {  
+            renderUserData(data);
+            localStorage.setItem("userData", JSON.stringify(data));
+            localStorage.setItem("lastFetchTime", now);
+          }  
+        } catch (err) { console.error("Error fetching details:", err); }  
+      };  
+
+      onMounted(() => {  
+        if (window.lucide) lucide.createIcons();  
+        fetchUserDetails(true);  
+        setInterval(() => fetchUserDetails(true), 10000);
+
+        const toggleBtn = document.getElementById("toggleBalance");
+        toggleBtn.addEventListener("click", () => {
+          const hide = localStorage.getItem("hideBalance") === "true";
+          localStorage.setItem("hideBalance", !hide);
+          fetchUserDetails(true);
+        });
+      });  
+
+      watch(active, () => { if (window.lucide) lucide.createIcons(); });  
+      return { active };  
+    }  
+  }).mount('#app');  
+  </script>    
+
+  <!-- ✅ Notifications integration -->          
+  <script>  
+  async function checkNotifications() {  
+    try {  
+      const res = await fetch("https://datapaddy.com.ng/api/notify");  
+      const data = await res.json();  
+      if (data.success && data.count > 0) {  
+        const latest = data.data[0];  
+        const lastId = localStorage.getItem("lastNotificationId");  
+
+        if (lastId !== String(latest.id)) {  
+          if (typeof NativeNotify !== "undefined") {  
+            NativeNotify.showNotification(latest.title, latest.message);  
+          }  
+          localStorage.setItem("lastNotificationId", latest.id);  
+        }  
+      }  
+    } catch (err) { console.error("Error fetching notifications:", err); }  
+  }  
+  window.addEventListener("load", () => {  
+    checkNotifications();  
+    setInterval(checkNotifications, 60000);  
+  });  
+  </script>  
+</body>  
+  </html>
