@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In</title>
+<title>Platrlat - Sign In</title>
 
 <!-- FontAwesome & Toastify -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,10 +17,10 @@
   h1 { font-size:32px; margin-bottom:25px; }
   label { font-size:14px; margin-bottom:6px; display:block; color:#333; }
   .input-group { position:relative; margin-bottom:20px; }
-  .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#c70404; }
+  .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#0069ff; }
   .input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
   .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; box-sizing:border-box; width:100%; margin-bottom:10px; transition:0.3s; }
-  .btn-signin { background:#01009C; color:#fff; font-weight:bold; }
+  .btn-signin { background:#0069ff; color:#fff; font-weight:bold; }
   .btn-signin:disabled { opacity:0.6; cursor:not-allowed; }
   .btn-contact, .btn-create { background:#eee; color:#000; border:1px solid #ccc; }
   .signup-text { text-align:center; font-size:14px; margin:15px 0 10px; color:#333; cursor:pointer; }
@@ -113,7 +113,7 @@ function loginUser() {
   signinBtn.textContent = "Logging in...";
   signinBtn.disabled = true;
 
-  fetch("https://datapaddy.com.ng/api/login", {
+  fetch("https://pulsepoint.com.ng/api/login", {
     method: "POST",
     headers: {"Content-Type": "application/json", "Accept": "application/json"},
     body: JSON.stringify({login: username, password: password})
