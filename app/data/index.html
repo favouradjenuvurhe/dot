@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Buy Data</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+:root { --base-color: #0069ff; }
+.bg-base { background-color: var(--base-color); }
+.text-base { color: var(--base-color); }
+.border-base { border-color: var(--base-color); }
+.hover\:bg-base:hover { background-color: var(--base-color); }
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+</style>
+</head>
+<body class="bg-white h-screen flex flex-col font-sans">
+<div id="app" class="flex flex-col h-full">
+  <!-- Header -->
+  </p>
+  <div class="flex items-center px-4 py-3 border-b">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Buy Data</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Main Form -->
+  <div class="flex-1 overflow-y-auto px-4 mt-4">
+    <!-- Network Selection -->
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <button v-for="network in networks" :key="network.id"
+        @click="selectNetwork(network)"
+        :class="selectedNetwork && selectedNetwork.id === network.id ? 'border-base' : 'border-gray-200'"
+        class="flex items-center gap-3 border rounded-lg px-3 py-2 transition-colors">
+        <img :src="network.logo" class="w-8 h-8 rounded-full object-contain" />
+        <span class="font-medium text-sm">{{ network.name }}</span>
+      </button>
+    </div>
+
+    <!-- Plan Type Slideshow -->
+    <div v-if="planTypes.length" class="overflow-x-auto mb-4">
+      <div class="flex space-x-4 w-max px-1">
+        <div v-for="type in planTypes" :key="type"
+             @click="selectPlanType(type)"
+             class="min-w-[120px] border rounded-xl p-3 text-center cursor-pointer"
+             :class="selectedPlanType === type ? 'border-base bg-base/10' : 'border-gray-200'">
+          <div class="text-sm font-medium">{{ type }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plans Grid -->
+    <div v-if="filteredPlans.length" class="grid grid-cols-2 gap-3 mb-4">
+      <button v-for="plan in filteredPlans" :key="plan.planID"
+        @click="selectedPlan = plan"
+        :class="selectedPlan && selectedPlan.planID === plan.planID ? 'border-base bg-base/10' : 'border-gray-200'"
+        class="flex flex-col justify-between border rounded-lg px-3 py-2 transition-colors cursor-pointer">
+        <span class="font-medium text-sm">{{ plan.planName }}</span>
+        <span class="text-sm font-semibold">₦{{ plan.sellAmount }}</span>
+      </button>
+    </div>
+
+    <!-- Inputs -->
+    <div class="mt-4 space-y-3">
+      <div class="flex items-center border rounded-lg px-3">
+        <input type="tel" placeholder="Phone Number" v-model="phone" class="flex-1 py-3 outline-none" @input="formatPhone" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Continue Button -->
+  <div class="border-t bg-white p-4">
+    <button @click="openPreview" class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md">
+      Continue
+    </button>
+  </div>
+
+  <!-- Preview Modal -->
+  <div v-if="showPreview" class="fixed inset-0 bg-black bg-opacity-40 flex items-end z-40">
+    <div class="bg-white w-full h-1/2 rounded-t-2xl p-6 animate-slide-up">
+      <h2 class="text-lg font-semibold text-center mb-4">Confirm Purchase</h2>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between"><span>Network:</span><span>{{ selectedNetwork.name }}</span></div>
+        <div class="flex justify-between"><span>Plan:</span><span>{{ selectedPlan.planName }}</span></div>
+        <div class="flex justify-between"><span>Amount:</span><span>₦{{ selectedPlan.sellAmount }}</span></div>
+        <div class="flex justify-between"><span>Phone:</span><span>{{ phone }}</span></div>
+      </div>
+      <div class="mt-6 flex gap-3">
+        <button @click="showPreview=false" class="flex-1 py-3 rounded-lg border">Cancel</button>
+        <button @click="openPin" class="flex-1 py-3 rounded-lg bg-base text-white">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN Modal -->
+  <div v-if="showPin" class="fixed inset-0 bg-black bg-opacity-40 flex items-end z-50">
+    <div class="bg-white w-full h-3/4 rounded-t-2xl p-6 animate-slide-up flex flex-col relative">
+      <button @click="showPin=false; pin=''" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h2 class="text-lg font-semibold text-center mb-4">Enter 4-Digit PIN</h2>
+      <div class="flex justify-center mb-6">
+        <div class="text-3xl tracking-widest">{{ '•'.repeat(pin.length) }}</div>
+      </div>
+      <!-- Keypad -->
+      <div class="grid grid-cols-3 gap-6 flex-1 place-items-center">
+        <button v-for="n in 9" :key="n" @click="enterDigit(n)"
+          class="w-16 h-16 flex items-center justify-center rounded-full border text-xl font-semibold">
+          {{ n }}
+        </button>
+        <button @click="deleteDigit" class="w-16 h-16 flex items-center justify-center rounded-full border text-xl">⌫</button>
+        <button @click="enterDigit(0)" class="w-16 h-16 flex items-center justify-center rounded-full border text-xl">0</button>
+        <button @click="clearPin" class="w-16 h-16 flex items-center justify-center rounded-full border text-sm">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN Preloader -->
+  <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-[60]">
+    <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>
+    <p class="text-white text-lg font-medium">Processing...</p>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      phone: '',
+      selectedNetwork: null,
+      selectedPlanType: null,
+      selectedPlan: null,
+      networks: [
+        { id: '1', name: 'MTN Data', logo: 'https://datapaddy.com.ng/img/MTN.png' },
+        { id: '2', name: 'GLO Data', logo: 'https://datapaddy.com.ng/img/GLO.png' },
+        { id: '4', name: 'Airtel Data', logo: 'https://datapaddy.com.ng/img/AIRTEL.png' },
+        { id: '3', name: '9mobile Data', logo: 'https://datapaddy.com.ng/img/9MOBILE.png' }
+      ],
+      plans: [],
+      planTypes: [],
+      showPreview: false,
+      showPin: false,
+      pin: '',
+      loading: false
+    }
+  },
+  computed: {
+    filteredPlans() {
+      if(!this.selectedPlanType) return [];
+      return this.plans.filter(p => p.planType === this.selectedPlanType);
+    }
+  },
+  mounted() { lucide.createIcons(); },
+  methods: {
+    goBack() { if(!this.loading) window.location.href='/app'; },
+    formatPhone() {
+      let num = this.phone.replace(/\s+/g,'');
+      if(num.startsWith('+234')) num = '0'+num.slice(4);
+      else if(num.startsWith('234')) num = '0'+num.slice(3);
+      if(num.length>11) num = num.slice(0,11);
+      this.phone = num;
+    },
+    selectNetwork(network){
+      this.selectedNetwork = network;
+      this.selectedPlanType = null;
+      this.selectedPlan = null;
+      this.fetchPlans(network.id);
+    },
+    async fetchPlans(networkId){
+      this.loading=true;
+      try{
+        const res = await fetch('https://pulsepoint.com.ng/api/get-data');
+        const data = await res.json();
+        this.plans = data.plans.filter(p => p.network.toUpperCase() === networkId.toUpperCase());
+        this.planTypes = [...new Set(this.plans.map(p => p.planType))];
+      } catch(e){ this.toast('Failed to fetch plans','error'); }
+      this.loading=false;
+    },
+    selectPlanType(type){ this.selectedPlanType = type; this.selectedPlan = null; },
+    openPreview() {
+      if(!this.selectedNetwork) return this.toast('Select network','error');
+      if(!this.selectedPlanType) return this.toast('Select plan type','error');
+      if(!this.selectedPlan) return this.toast('Select plan','error');
+      if(!this.phone || this.phone.length!==11) return this.toast('Enter valid phone','error');
+      this.showPreview=true;
+    },
+    openPin(){ this.showPreview=false; this.showPin=true; },
+    enterDigit(n){ if(this.pin.length<4){ this.pin+=n; if(this.pin.length===4){ this.showPin=false; this.submitPurchase(); } } },
+    deleteDigit(){ this.pin=this.pin.slice(0,-1); },
+    clearPin(){ this.pin=''; },
+    async submitPurchase(){
+      this.loading=true;
+      const token = localStorage.getItem('token') || '';
+      const payload = {
+        network: this.selectedNetwork.id,
+        planID: this.selectedPlan.planID,
+        mobile_number: this.phone,
+        pin: this.pin
+      };
+      try{
+        const res = await fetch('https://pulsepoint.com.ng/api/data',{
+          method:'POST',
+          headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        // ONLY check status
+        const isSuccess = data.status === 'success';
+        this.toast(data.message || (isSuccess ? 'Purchase successful' : 'Purchase failed'), isSuccess ? 'success' : 'error');
+
+        if(typeof NativeNotify !== "undefined")
+          NativeNotify.showNotification(
+            'Data Purchase',
+            `₦${this.selectedPlan.sellAmount} ${this.selectedNetwork.name} ${isSuccess ? 'success' : 'failed'}`
+          );
+
+        if(isSuccess){
+          this.pin='';
+          setTimeout(()=>{ window.location.href="success"; },1500);
+        } else this.clearPin();
+
+      } catch(e){ this.toast('Network error','error'); this.clearPin(); }
+      this.loading=false;
+    },
+    toast(msg,type){
+      const bg = type==='success' ? 'green' : type==='warning' ? 'orange' : 'red';
+      Toastify({text:msg,duration:3000,gravity:'top',position:'center',close:true,backgroundColor:bg}).showToast();
+    }
+  }
+}).mount('#app');
+</script>
+</body>
+</html>
