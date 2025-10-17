@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff;
+      color: #000;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+      padding: 20px;
+    }
+    h1 { font-size: 32px; margin-bottom: 25px; }
+    label { font-size: 14px; margin-bottom: 6px; display: block; color: #333; }
+    .input-group { position: relative; margin-bottom: 20px; }
+    .input-group i {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); color: #01009C;
+    }
+    .input-group input {
+      width: 100%; padding: 12px 40px;
+      border-radius: 8px; border: 1px solid #ccc;
+      background: #f9f9f9; color: #000;
+      font-size: 14px; box-sizing: border-box;
+    }
+    .btn {
+      width: 100%; padding: 14px; font-size: 16px;
+      border-radius: 8px; border: none;
+      cursor: pointer; margin-bottom: 15px; box-sizing: border-box;
+    }
+    .btn-create { background: #01009C; color: #000; font-weight: bold; }
+    .btn-contact { background: #eee; color: #000; border: 1px solid #ccc; }
+    .signup-text { text-align: center; font-size: 14px; margin: 20px 0 10px; color: #333; }
+    #responseBox {
+      font-size: 14px;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      background: #f4f4f4;
+      color: #333;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="registerContainer">
+    <h1>Create Account</h1>
+    <div id="responseBox"></div>
+    </br>
+
+    <label for="firstname">First Name</label>
+    <div class="input-group">
+      <i class="fa fa-user"></i>
+      <input type="text" id="firstname" placeholder="John">
+    </div>
+
+    <label for="lastname">Last Name</label>
+    <div class="input-group">
+      <i class="fa fa-user"></i>
+      <input type="text" id="lastname" placeholder="Doe">
+    </div>
+
+    <label for="username">Username</label>
+    <div class="input-group">
+      <i class="fa fa-user-circle"></i>
+      <input type="text" id="username" placeholder="johndoe">
+    </div>
+
+    <label for="email">Email</label>
+    <div class="input-group">
+      <i class="fa fa-envelope"></i>
+      <input type="text" id="email" placeholder="you@example.com">
+    </div>
+
+    <label for="mobile">Mobile</label>
+    <div class="input-group">
+      <i class="fa fa-phone"></i>
+      <input type="text" id="mobile" placeholder="08012345678">
+    </div>
+
+    <label for="password">Password</label>
+    <div class="input-group">
+      <i class="fa fa-lock"></i>
+      <input type="password" id="password" placeholder="********">
+    </div>
+
+    <label for="referral">Referral (optional)</label>
+    <div class="input-group">
+      <i class="fa fa-user-plus"></i>
+      <input type="text" id="referral" placeholder="frienduser">
+    </div>
+
+    <button class="btn btn-create" onclick="registerUser()">Create Account</button>
+    <button class="btn btn-contact">Contact us</button>
+
+    <div class="signup-text">
+      Already have an account? <a href="index.html">Sign in</a>
+    </div>
+  </div>
+
+  <script>
+    // ✅ Auto-redirect if already logged in
+    window.onload = function() {
+      const token = localStorage.getItem("token");
+      if (token) {
+        window.location.href = "home.html";
+      }
+    };
+
+    // ✅ Register function with fetch
+    function registerUser() {
+      const firstname = document.getElementById("firstname").value.trim();
+      const lastname = document.getElementById("lastname").value.trim();
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const mobile = document.getElementById("mobile").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const referral = document.getElementById("referral").value.trim();
+      const responseBox = document.getElementById("responseBox");
+
+      if (!firstname || !lastname || !username || !email || !mobile || !password) {
+        responseBox.style.display = "block";
+        responseBox.style.color = "red";
+        responseBox.textContent = "⚠️ Please fill all required fields.";
+        return;
+      }
+
+      responseBox.style.display = "block";
+      responseBox.style.color = "#333";
+      responseBox.textContent = "⏳ Creating account...";
+
+      fetch("https://datapaddy.com.ng/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ firstname, lastname, username, email, mobile, password, referral })
+      })
+      .then(res => res.json())
+      .then(data => {
+        responseBox.style.display = "block";
+        responseBox.textContent = data.message || "Unknown response";
+
+        if (data.status) {
+          // Save token and user info
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("username", username); // Save username
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          // ✅ Redirect to passcode.html to set 4-digit PIN
+          setTimeout(() => {
+            window.location.href = "passcode.html";
+          }, 1000);
+        } else {
+          responseBox.style.color = "red";
+        }
+      })
+      .catch(err => {
+        responseBox.style.color = "red";
+        responseBox.textContent = "Error: " + err;
+        console.error("Error:", err);
+      });
+    }
+  </script>
+
+  <script>
+    // Disable inspect / copy
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    ['copy','cut','paste','selectstart'].forEach(evt =>
+      document.addEventListener(evt, e => e.preventDefault())
+    );
+    document.addEventListener('keydown', e => {
+      if (e.ctrlKey && ['u','s','a'].includes(e.key)) e.preventDefault();
+    });
+
+    // ✅ Detect no internet and redirect
+    function checkConnection() {
+      if (!navigator.onLine) {
+        window.location.href = "connection.html";
+      }
+    }
+    window.addEventListener("load", checkConnection);
+    window.addEventListener("online", checkConnection);
+    window.addEventListener("offline", checkConnection);
+  </script>
+</body>
+        </html>
