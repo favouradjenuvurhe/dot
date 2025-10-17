@@ -19,7 +19,7 @@
   <!-- App Wrapper -->                  
   <div id="app" class="flex-1 flex flex-col">                    
     <!-- Header -->                    
-    <div class="bg-[#01009C] text-[#FFFFFF] p-5 rounded-b-2xl">                  
+    <div class="bg-[#0069ff] text-[#FFFFFF] p-5 rounded-b-2xl">                  
       </br></br>                  
       <div class="flex justify-between items-center">                  
         <div class="flex items-center">                  
@@ -51,7 +51,7 @@
         </div>                  
         <div class="flex items-center space-x-3">                  
           <i id="toggleBalance" data-lucide="eye-off" class="w-5 h-5 text-gray-500 cursor-pointer"></i>                  
-          <button onclick="window.location.href='fund.html'" class="bg-[#c70404] text-[#FFFFFF] px-4 py-2 rounded-lg text-sm flex items-center space-x-1">                  
+          <button onclick="window.location.href='fund.html'" class="bg-[#0069ff] text-[#FFFFFF] px-4 py-2 rounded-lg text-sm flex items-center space-x-1">                  
             <i data-lucide="plus" class="w-4 h-4"></i>                  
             <span>Fund</span>                  
           </button>                  
@@ -59,19 +59,19 @@
       </div>                  
       <div class="grid grid-cols-4 gap-2 mt-4 text-center">                    
         <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='bank.html'">                    
-          <i data-lucide="send" class="w-6 h-6 text-[#c70404]"></i>                    
+          <i data-lucide="send" class="w-6 h-6 text-[#0069ff]"></i>                    
           <span class="text-xs">Transfer</span>                    
         </div>                      
         <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='airtime.html'">                    
-          <i data-lucide="phone" class="w-6 h-6 text-[#c70404]"></i>                    
+          <i data-lucide="phone" class="w-6 h-6 text-[#0069ff]"></i>                    
           <span class="text-xs">Airtime</span>                    
         </div>                      
         <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='data.html'">                    
-          <i data-lucide="wifi" class="w-6 h-6 text-[#c70404]"></i>                    
+          <i data-lucide="wifi" class="w-6 h-6 text-[#0069ff]"></i>                    
           <span class="text-xs">Data</span>                    
         </div>                      
         <div class="flex flex-col items-center cursor-pointer" onclick="window.location.href='more-bills.html'">                    
-          <i data-lucide="more-horizontal" class="w-6 h-6 text-[#c70404]"></i>                    
+          <i data-lucide="more-horizontal" class="w-6 h-6 text-[#0069ff]"></i>                    
           <span class="text-xs">More Bills</span>                    
         </div>                    
       </div>                    
@@ -79,15 +79,15 @@
                  
     <!-- Banner -->                    
     <div class="flex space-x-3 overflow-x-auto mt-3 px-4">                  
-      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
-      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
-      <img src="https://datapaddy.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+      <img src="https://pulsepoint.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+      <img src="https://pulsepoint.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
+      <img src="https://pulsepoint.com.ng/img/ads.png" class="w-72 h-24 rounded-lg flex-shrink-0">                  
     </div>                    
     <!-- Recent Activities -->                    
     <div class="mt-5 px-4 mb-20">                  
       <div class="flex justify-between items-center mb-2">                  
         <h2 class="font-semibold text-sm">Recent Activities</h2>                  
-        <span class="text-[#c70404] text-xs">See all</span>                  
+        <span class="text-[#0069ff] text-xs">See all</span>                  
       </div>                  
       <div class="space-y-3" id="transactionsList"></div>                  
     </div>                    
@@ -183,7 +183,7 @@
             const div = document.createElement("div");          
             div.className = "flex items-center bg-white p-3 rounded-xl shadow";          
             div.innerHTML = `          
-              <img src="https://datapaddy.com.ng/img/${logo}" class="w-10 h-10 rounded-full" />          
+              <img src="https://pulsepoint.com.ng/img/${logo}" class="w-10 h-10 rounded-full" />          
               <div class="ml-3 flex-1">          
                 <p class="text-sm font-medium">${tx.details || tx.title}</p>          
                 <p class="text-xs text-gray-500">${tx.created_at || tx.date}</p>          
@@ -218,7 +218,7 @@
         }
 
         try {  
-          const res = await fetch("https://datapaddy.com.ng/api/user/details", {  
+          const res = await fetch("https://pulsepoint.com.ng/api/user/details", {  
             method: "GET",  
             headers: { "Authorization": "Bearer " + token, "Accept": "application/json" }  
           });  
