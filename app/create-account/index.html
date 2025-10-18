@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create Account</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body {
       margin: 0;
@@ -22,7 +25,7 @@
     .input-group { position: relative; margin-bottom: 20px; }
     .input-group i {
       position: absolute; left: 12px; top: 50%;
-      transform: translateY(-50%); color: #01009C;
+      transform: translateY(-50%); color: #0069ff;
     }
     .input-group input {
       width: 100%; padding: 12px 40px;
@@ -34,8 +37,9 @@
       width: 100%; padding: 14px; font-size: 16px;
       border-radius: 8px; border: none;
       cursor: pointer; margin-bottom: 15px; box-sizing: border-box;
+      transition: 0.3s;
     }
-    .btn-create { background: #01009C; color: #000; font-weight: bold; }
+    .btn-create { background: #0069ff; color: #fff; font-weight: bold; }
     .btn-contact { background: #eee; color: #000; border: 1px solid #ccc; }
     .signup-text { text-align: center; font-size: 14px; margin: 20px 0 10px; color: #333; }
     #responseBox {
@@ -98,7 +102,7 @@
     </div>
 
     <button class="btn btn-create" onclick="registerUser()">Create Account</button>
-    <button class="btn btn-contact">Contact us</button>
+    <button class="btn btn-contact" onclick="window.location.href='support-page'">Contact us</button>
 
     <div class="signup-text">
       Already have an account? <a href="index.html">Sign in</a>
@@ -106,15 +110,46 @@
   </div>
 
   <script>
+    if (window.lucide) lucide.createIcons();
+
+    // ✅ Toastify function (same as login)
+    function showToast(message, type = "info") {
+      let bgColor = "#333";
+      let icon = "info";
+      if (type === "success") { bgColor = "#16a34a"; icon = "check-circle"; }
+      if (type === "error") { bgColor = "#dc2626"; icon = "alert-circle"; }
+      if (type === "info") { bgColor = "#2563eb"; icon = "info"; }
+
+      const el = document.createElement("div");
+      el.className = "flex items-center space-x-2 text-white";
+      el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i><span>${message}</span>`;
+      if (window.lucide) lucide.createIcons({ icons: [icon] });
+
+      Toastify({
+        node: el,
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        close: false,
+        stopOnFocus: true,
+        style: {
+          background: bgColor,
+          borderRadius: "10px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.15)",
+          padding: "10px 16px"
+        }
+      }).showToast();
+    }
+
     // ✅ Auto-redirect if already logged in
     window.onload = function() {
       const token = localStorage.getItem("token");
       if (token) {
-        window.location.href = "home.html";
+        window.location.href = "/app/dashboard";
       }
     };
 
-    // ✅ Register function with fetch
+    // ✅ Register function with Toastify notifications
     function registerUser() {
       const firstname = document.getElementById("firstname").value.trim();
       const lastname = document.getElementById("lastname").value.trim();
@@ -123,18 +158,13 @@
       const mobile = document.getElementById("mobile").value.trim();
       const password = document.getElementById("password").value.trim();
       const referral = document.getElementById("referral").value.trim();
-      const responseBox = document.getElementById("responseBox");
 
       if (!firstname || !lastname || !username || !email || !mobile || !password) {
-        responseBox.style.display = "block";
-        responseBox.style.color = "red";
-        responseBox.textContent = "⚠️ Please fill all required fields.";
+        showToast("⚠️ Please fill all required fields.", "error");
         return;
       }
 
-      responseBox.style.display = "block";
-      responseBox.style.color = "#333";
-      responseBox.textContent = "⏳ Creating account...";
+      showToast("⏳ Creating account...", "info");
 
       fetch("https://datapaddy.com.ng/api/register", {
         method: "POST",
@@ -143,39 +173,34 @@
       })
       .then(res => res.json())
       .then(data => {
-        responseBox.style.display = "block";
-        responseBox.textContent = data.message || "Unknown response";
-
         if (data.status) {
           // Save token and user info
           localStorage.setItem("token", data.token);
-          localStorage.setItem("username", username); // Save username
+          localStorage.setItem("username", username);
           localStorage.setItem("user", JSON.stringify(data.user));
 
-          // ✅ Redirect to passcode.html to set 4-digit PIN
+          showToast("🎉 Account created successfully!", "success");
+
           setTimeout(() => {
-            window.location.href = "passcode.html";
+            window.location.href = "/app/passcode";
           }, 1000);
         } else {
-          responseBox.style.color = "red";
+          showToast(data.message || "Registration failed.", "error");
         }
       })
       .catch(err => {
-        responseBox.style.color = "red";
-        responseBox.textContent = "Error: " + err;
+        showToast("Error: " + err.message, "error");
         console.error("Error:", err);
       });
     }
-  </script>
 
-  <script>
     // Disable inspect / copy
     document.addEventListener('contextmenu', e => e.preventDefault());
     ['copy','cut','paste','selectstart'].forEach(evt =>
       document.addEventListener(evt, e => e.preventDefault())
     );
     document.addEventListener('keydown', e => {
-      if (e.ctrlKey && ['u','s','a'].includes(e.key)) e.preventDefault();
+      if (e.ctrlKey && ['u','s','a'].includes(e.key.toLowerCase())) e.preventDefault();
     });
 
     // ✅ Detect no internet and redirect
@@ -189,4 +214,4 @@
     window.addEventListener("offline", checkConnection);
   </script>
 </body>
-        </html>
+  </html>
