@@ -131,11 +131,6 @@ function showToast(message, type = "info") {
   }).showToast();
 }
 
-// ✅ Show a toast message when arriving at 404 page
-document.addEventListener("DOMContentLoaded", () => {
-  showToast("Page not found. Redirect to home?", "info");
-});
-
 // ✅ Disable inspect / copy
 document.addEventListener('contextmenu', e => e.preventDefault());
 ['copy','cut','paste','selectstart'].forEach(evt => document.addEventListener(evt, e => e.preventDefault()));
