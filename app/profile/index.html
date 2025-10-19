@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root { --base-color: #01009C; }
+    .bg-base { background-color: var(--base-color); }
+    .text-base { color: var(--base-color); }
+    .border-base { border-color: var(--base-color); }
+  </style>
+</head>
+<body class="bg-white h-screen flex flex-col font-sans">
+
+<div id="app" class="flex flex-col h-full">
+
+  <!-- Header -->
+  <div class="flex items-center px-4 py-3 border-b shadow-sm">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">My Account</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Main Content (fills screen) -->
+  <div class="flex-1 flex flex-col overflow-y-auto">
+
+    <!-- Profile Header -->
+    <div class="px-4 mt-6 flex justify-between items-center">
+      <h1 class="text-2xl font-bold">Profile</h1>
+      <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+        <img src="https://datapaddy.com.ng/img/avatar.png" alt="Avatar" class="w-10 h-10 rounded-full" />
+      </div>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="mt-8 space-y-3 px-4 flex-1">
+
+      <!-- Change Transaction Pin -->
+      <div @click="goTo('passcode.html')" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-3">
+          <i data-lucide="key-round" class="text-gray-800 w-6 h-6"></i>
+          <div>
+            <h3 class="font-semibold">Change Transaction PIN</h3>
+            <p class="text-gray-500 text-sm">Update your security PIN</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+      </div>
+
+      <!-- Refer & Earn -->
+      <div @click="goTo('activity/refer.html')" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-3">
+          <i data-lucide="users" class="text-gray-800 w-6 h-6"></i>
+          <div>
+            <h3 class="font-semibold">Refer & Earn</h3>
+            <p class="text-gray-500 text-sm">Invite friends & earn rewards</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+      </div>
+
+      <!-- Help & Support -->
+      <div @click="goTo('activity/support.html')" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-3">
+          <i data-lucide="headphones" class="text-gray-800 w-6 h-6"></i>
+          <div>
+            <h3 class="font-semibold">Help & Support</h3>
+            <p class="text-gray-500 text-sm">Need assistance?</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+      </div>
+
+      <!-- Developer Page -->
+      <div @click="goTo('activity/developer.html')" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-3">
+          <i data-lucide="code-xml" class="text-gray-800 w-6 h-6"></i>
+          <div>
+            <h3 class="font-semibold">Developer Page</h3>
+            <p class="text-gray-500 text-sm">About the developer</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+      </div>
+
+      <!-- Delete Account -->
+      <div @click="goTo('https://datapaddy.com.ng/policy')" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-3">
+          <i data-lucide="trash-2" class="text-red-600 w-6 h-6"></i>
+          <div>
+            <h3 class="font-semibold text-red-600">Delete Account</h3>
+            <p class="text-gray-500 text-sm">Permanently remove your account</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+      </div>
+    </div>
+
+    <!-- Sign Out Button -->
+    <div class="mt-auto px-4 pb-6">
+      <button @click="goTo('logout.html')" class="w-full border font-semibold py-3 rounded-lg text-center block text-base border-base text-base">
+        Sign Out
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  mounted(){ lucide.createIcons(); },
+  methods: {
+    goBack(){ window.location.href="home.html"; },
+    goTo(page){ window.location.href = page; }
+  }
+}).mount('#app');
+</script>
+
+</body>
+          </html>
