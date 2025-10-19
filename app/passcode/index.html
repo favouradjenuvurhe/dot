@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Set Passcode</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+:root { --base-color: #01009C; }
+.bg-base { background-color: var(--base-color); }
+.text-base { color: var(--base-color); }
+.border-base { border-color: var(--base-color); }
+.hover\:bg-base:hover { background-color: var(--base-color); }
+
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+</style>
+</head>
+<body class="bg-white h-screen flex flex-col font-sans">
+
+<div id="app" class="flex flex-col h-full">
+
+  <!-- Header -->
+  <div class="flex items-center px-4 py-3 border-b">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Set Passcode</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex items-center justify-center px-4">
+
+    <div class="text-center">
+      <h2 class="text-xl font-semibold mb-6">Enter 4-Digit Passcode</h2>
+
+      <!-- PIN Display -->
+      <div class="flex justify-center mb-6 gap-6">
+        <div v-for="n in 4" :key="n" class="w-5 h-5 border-2 rounded-full"
+             :class="pin.length >= n ? 'bg-base border-base' : 'border-gray-300'"></div>
+      </div>
+
+      <!-- Keypad -->
+      <div class="grid grid-cols-3 gap-6 justify-center">
+        <button v-for="n in 9" :key="n" @click="enterDigit(n)"
+          class="w-16 h-16 flex items-center justify-center rounded-full border text-xl font-semibold hover:bg-base hover:text-white transition">
+          {{ n }}
+        </button>
+        <button @click="deleteDigit"
+          class="w-16 h-16 flex items-center justify-center rounded-full border text-xl hover:bg-red-500 hover:text-white transition">⌫</button>
+        <button @click="enterDigit(0)"
+          class="w-16 h-16 flex items-center justify-center rounded-full border text-xl hover:bg-base hover:text-white transition">0</button>
+        <button @click="submitPin"
+          class="w-16 h-16 flex items-center justify-center rounded-full border text-xl bg-base text-white hover:bg-blue-700 transition">✔</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FULLSCREEN Preloader -->
+  <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-[60]">
+    <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>
+    <p class="text-white text-lg font-medium">Processing...</p>
+  </div>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      pin: '',
+      loading: false
+    }
+  },
+  mounted() { lucide.createIcons(); },
+  methods: {
+    goBack() { window.location.href = 'create.html'; },
+    enterDigit(n) {
+      if(this.pin.length < 4) this.pin += n;
+    },
+    deleteDigit() { this.pin = this.pin.slice(0, -1); },
+    async submitPin() {
+      if(this.pin.length !== 4) {
+        Toastify({text:'⚠️ Enter 4 digits', duration:3000, gravity:'top', position:'center', backgroundColor:'red'}).showToast();
+        return;
+      }
+      this.loading = true;
+      const token = localStorage.getItem('token');
+      if(!token){
+        Toastify({text:'Token missing, login again', duration:3000, gravity:'top', position:'center', backgroundColor:'red'}).showToast();
+        this.loading=false; return;
+      }
+      try {
+        const res = await fetch('https://datapaddy.com.ng/api/create-passcode',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body:JSON.stringify({token, userpin:this.pin})
+        });
+        const data = await res.json();
+        if(data.status){
+          Toastify({text:data.message || 'Passcode set!', duration:3000, gravity:'top', position:'center', backgroundColor:'green'}).showToast();
+          setTimeout(()=>{ window.location.href='home.html'; },1000);
+        } else {
+          Toastify({text:data.message || 'Failed', duration:3000, gravity:'top', position:'center', backgroundColor:'red'}).showToast();
+          this.pin='';
+        }
+      } catch(e){
+        Toastify({text:'Network error', duration:3000, gravity:'top', position:'center', backgroundColor:'red'}).showToast();
+        this.pin='';
+      }
+      this.loading=false;
+    }
+  }
+}).mount('#app');
+</script>
+
+</body>
+  </html>
