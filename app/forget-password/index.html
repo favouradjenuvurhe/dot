@@ -167,7 +167,7 @@
         if (data.status) {
           showToast(data.message || "Reset link sent!", "success");
           localStorage.setItem("reset_email", email);
-          setTimeout(() => window.location.href = "reset-password", 1000);
+          setTimeout(() => window.location.href = "/app/reset-password", 1000);
         } else {
           showToast(data.message || "Unable to send reset link.", "error");
         }
