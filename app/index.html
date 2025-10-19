@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Platrlat - Sign In</title>
 
-<!-- FontAwesome & Toastify -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Toastify & Lucide -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -17,13 +16,50 @@
   h1 { font-size:32px; margin-bottom:25px; }
   label { font-size:14px; margin-bottom:6px; display:block; color:#333; }
   .input-group { position:relative; margin-bottom:20px; }
-  .input-group i { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#0069ff; }
-  .input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
-  .btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; box-sizing:border-box; width:100%; margin-bottom:10px; transition:0.3s; }
+  .input-group svg {
+    position:absolute;
+    left:12px;
+    top:50%;
+    transform:translateY(-50%);
+    color:#0069ff;
+    width:18px;
+    height:18px;
+  }
+  .input-group input {
+    width:100%;
+    padding:12px 40px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    background:#f9f9f9;
+    color:#000;
+    font-size:14px;
+    box-sizing:border-box;
+  }
+  .btn {
+    padding:14px;
+    font-size:16px;
+    border-radius:8px;
+    border:none;
+    cursor:pointer;
+    box-sizing:border-box;
+    width:100%;
+    margin-bottom:10px;
+    transition:0.3s;
+  }
   .btn-signin { background:#0069ff; color:#fff; font-weight:bold; }
   .btn-signin:disabled { opacity:0.6; cursor:not-allowed; }
-  .btn-contact, .btn-create { background:#eee; color:#000; border:1px solid #ccc; }
-  .signup-text { text-align:center; font-size:14px; margin:15px 0 10px; color:#333; cursor:pointer; }
+  .btn-contact, .btn-create {
+    background:#eee;
+    color:#000;
+    border:1px solid #ccc;
+  }
+  .signup-text {
+    text-align:center;
+    font-size:14px;
+    margin:15px 0 10px;
+    color:#333;
+    cursor:pointer;
+  }
 </style>
 </head>
 
@@ -33,13 +69,13 @@
   
   <label for="email">Email</label>
   <div class="input-group">
-    <i class="fa fa-envelope"></i>
+    <i data-lucide="mail"></i>
     <input type="text" id="username" placeholder="you@example.com">
   </div>
 
   <label for="password">Password</label>
   <div class="input-group">
-    <i class="fa fa-lock"></i>
+    <i data-lucide="lock"></i>
     <input type="password" id="password" placeholder="********">
   </div>
 
