@@ -157,7 +157,7 @@
       resetBtn.textContent = "Resetting...";
       resetBtn.disabled = true;
 
-      fetch("https://datapaddy.com.ng/api/forgot-password", {
+      fetch("https://pulsepoint.com.ng/api/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({ type: "email", value: email })
