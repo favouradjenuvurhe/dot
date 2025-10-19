@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bank Transfer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
+<style>
+:root { --base-color: #c70404; }
+.bg-base { background-color: var(--base-color); }
+.text-base { color: var(--base-color); }
+.border-base { border-color: var(--base-color); }
+.hover\:bg-base:hover { background-color: var(--base-color); }
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+
+/* Horizontal bank list */
+.bank-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+}
+.bank-scroll::-webkit-scrollbar {
+  display: none;
+}
+.bank-item {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  width: 90px;
+  text-align: center;
+  cursor: pointer;
+}
+.bank-item img {
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  border-radius: 9999px;
+  object-fit: contain;
+  border: 2px solid transparent;
+  transition: 0.3s;
+}
+.bank-item.selected img {
+  border-color: var(--base-color);
+  box-shadow: 0 0 0 2px var(--base-color);
+}
+.bank-item span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
+</head>
+
+<body class="bg-white h-screen flex flex-col font-sans">
+<div id="app" class="flex flex-col h-full">
+
+  <!-- Header -->
+  <div class="flex items-center px-4 py-3 border-b">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Bank Transfer</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Main Form -->
+  <div class="flex-1 overflow-y-auto px-4 mt-4 space-y-4">
+    <!-- Bank Search -->
+    <input type="text" v-model="search" placeholder="Search bank..." class="w-full border rounded-lg px-3 py-3 outline-none" />
+
+    <!-- Scrollable Bank List -->
+    <div class="bank-scroll mt-2">
+      <div v-for="bank in filteredBanks" :key="bank.bankCode"
+           :class="['bank-item', selectedBank && selectedBank.bankCode === bank.bankCode ? 'selected' : '']"
+           @click="selectBank(bank)">
+        <img :src="bank.logo_url || 'https://via.placeholder.com/50'" />
+        <span>{{ bank.bankName }}</span>
+      </div>
+    </div>
+
+    <!-- Account Number -->
+    <div class="border rounded-lg px-3 flex items-center">
+      <input type="tel" placeholder="Account Number" maxlength="10" v-model="accountNumber"
+             @input="handleAccountInput" class="flex-1 py-3 outline-none" />
+      <svg v-if="verifying" class="animate-spin h-5 w-5 text-base" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+    </div>
+
+    <!-- Account Name -->
+    <div v-if="accountName" class="border rounded-lg px-3 py-3 bg-gray-50 animate-slide-up">
+      <p class="text-sm text-gray-600">Account Name:</p>
+      <p class="font-semibold text-green-600">{{ accountName }}</p>
+    </div>
+
+    <!-- Amount -->
+    <div class="border rounded-lg px-3">
+      <input type="number" placeholder="Amount (₦)" v-model="amount" class="flex-1 py-3 outline-none" />
+    </div>
+  </div>
+
+  <!-- Continue Button -->
+  <div class="border-t bg-white p-4">
+    <button @click="proceedTransfer" class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md">
+      Continue
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-[60]">
+    <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>
+    <p class="text-white text-lg font-medium">Processing...</p>
+  </div>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      banks: [],
+      search: '',
+      selectedBank: null,
+      accountNumber: '',
+      accountName: '',
+      verifying: false,
+      amount: '',
+      loading: false,
+    }
+  },
+  computed: {
+    filteredBanks() {
+      return this.banks.filter(b =>
+        b.bankName.toLowerCase().includes(this.search.toLowerCase())
+      );
+    }
+  },
+  mounted() {
+    lucide.createIcons();
+    this.getBanks();
+  },
+  methods: {
+    goBack() { window.location.href = 'home.html'; },
+
+    async getBanks() {
+      try {
+        const res = await fetch('https://pulsepoint.com.ng/api/banklist');
+        const data = await res.json();
+        if (data.status === 'success' || data.ok) {
+          this.banks = data.data || data.body?.banks || [];
+        } else {
+          this.toast('Failed to load banks', 'error');
+        }
+      } catch (e) {
+        this.toast('Network error loading banks', 'error');
+      }
+    },
+
+    selectBank(bank) {
+      this.selectedBank = bank;
+    },
+
+    async handleAccountInput() {
+      if (this.accountNumber.length === 10 && this.selectedBank) {
+        this.verifying = true;
+        this.accountName = '';
+        try {
+          const res = await fetch('https://pulsepoint.com.ng/api/verify-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bankCode: this.selectedBank.bankCode,
+              accountNumber: this.accountNumber
+            })
+          });
+          const data = await res.json();
+
+          // ✅ Match the structure you provided exactly
+          if (data.ok && data.body && data.body.status === 'success' && data.body.content?.accountName) {
+            this.accountName = data.body.content.accountName;
+            this.toast('Account verified successfully', 'success');
+          } else {
+            this.accountName = '';
+            this.toast('Coming Sooner', 'error');
+          }
+        } catch (e) {
+          this.toast('Network error verifying account', 'error');
+        } finally {
+          this.verifying = false;
+        }
+      } else {
+        this.accountName = '';
+      }
+    },
+
+    proceedTransfer() {
+      if (!this.selectedBank) return this.toast('Select a bank', 'error');
+      if (!this.accountNumber || this.accountNumber.length < 10) return this.toast('Enter valid account number', 'error');
+      if (!this.amount || this.amount <= 0) return this.toast('Enter valid amount', 'error');
+      this.toast('Ready to transfer', 'success');
+    },
+
+    toast(msg, type) {
+      const bg = type === 'success' ? '#16a34a' : '#dc2626';
+      Toastify({
+        text: msg,
+        duration: 3000,
+        gravity: 'top',
+        position: 'center',
+        close: true,
+        backgroundColor: bg
+      }).showToast();
+    }
+  }
+}).mount('#app');
+</script>
+</body>
+  </html>
