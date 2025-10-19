@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction History</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Bootstrap Icons CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <style>
+    :root { --base-color: #01009C; }
+    .text-base { color: var(--base-color); }
+    .border-base { border-color: var(--base-color); }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+<div id="app" class="flex flex-col min-h-screen">
+  <!-- Header -->
+  <div class="flex items-center px-4 py-3 border-b bg-white shadow-sm">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Transaction History</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Transactions List -->
+  <div class="flex-1 overflow-y-auto p-4">
+    <!-- Empty State -->
+    <div v-if="transactions.length === 0" class="flex flex-col items-center mt-10 text-center">
+      <img src="https://cdn.myportfolio.com/17be4dd08c5417027a544816a909fcf8/fb2dab8c-5de5-47ba-96bc-c262ccdcdad0_rw_600.gif?h=adec1dcadf3bdfb29a908988bfeb432e" 
+           alt="No Transactions" class="w-40 h-40" />
+      <h4 class="mt-4 font-semibold text-lg">No Transactions Found</h4>
+      <p class="text-gray-500 text-sm">Your transactions will appear here once you start spending.</p>
+    </div>
+
+    <!-- Transactions Render -->
+    <div v-else class="space-y-3">
+      <div v-for="tx in transactions" :key="tx.id" 
+           class="flex items-center bg-white p-4 rounded-xl shadow cursor-pointer"
+           @click="openReceipt(tx)">
+        <img :src="'https://pulsepoint.com.ng/img/' + getLogo(tx.details)" 
+             class="w-12 h-12 rounded-full object-contain" />
+        <div class="ml-3 flex-1">
+          <p class="text-sm font-medium">{{ tx.details }}</p>
+          <p class="text-xs text-gray-500">{{ tx.created_at }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-semibold">₦{{ formatMoney(tx.amount) }}</p>
+          <p class="text-xs" :class="statusClass(tx.status)">{{ tx.status }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Full-Screen Receipt Modal -->
+  <div v-if="selectedTx" class="fixed inset-0 bg-white z-50 flex flex-col">
+    <!-- Header -->
+    <div class="flex items-center p-4 border-b">
+      <button @click="closeReceipt" class="flex items-center text-base">
+        <i class="bi bi-arrow-left text-lg"></i>
+      </button>
+      <h1 class="flex-1 text-center text-lg font-semibold">Transaction Details</h1>
+      <div class="w-6"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto px-4">
+      <div class="flex flex-col items-center mt-4">
+        <img :src="'https://pulsepoint.com.ng/img/' + getLogo(selectedTx.details)" 
+             alt="Provider" class="w-20 h-20 rounded-full mb-4"/>
+        <h2 class="text-lg font-semibold">{{ selectedTx.details }}</h2>
+        <p class="text-gray-500 text-sm">Your transaction was {{ selectedTx.status }}.</p>
+      </div>
+
+      <!-- Details Card -->
+      <div class="bg-gray-50 shadow-sm rounded-xl mt-6 p-4 space-y-4">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Title</span>
+          <span class="flex items-center font-semibold text-sm">
+            <img :src="'https://diagipay.com.ng/img/' + getLogo(selectedTx.details)" 
+                 class="w-5 h-5 mr-1"/>
+            {{ selectedTx.details }}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">TRX ID</span>
+          <span class="flex items-center font-semibold text-sm cursor-pointer" @click="copyTrx(selectedTx.trx)">
+            {{ selectedTx.trx }}
+            <i class="bi bi-copy text-base ml-2"></i>
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Recipient</span>
+          <span class="font-semibold text-sm">{{ selectedTx.receipts }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Charge Back</span>
+          <span class="font-semibold text-sm">₦{{ formatMoney(selectedTx.charge) }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Amount</span>
+          <span class="font-semibold text-sm">₦{{ formatMoney(selectedTx.amount) }}</span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Status</span>
+          <span class="flex items-center font-semibold text-sm"
+                :class="{'text-green-600': selectedTx.status === 'Completed', 'text-red-600': selectedTx.status !== 'Completed'}">
+            <i :data-lucide="selectedTx.status === 'Completed' ? 'check-circle' : 'x-circle'"
+               class="w-4 h-4 mr-1"></i>
+            {{ selectedTx.status }}
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <span class="text-gray-600 text-sm">Date</span>
+          <span class="font-semibold text-sm">{{ selectedTx.created_at }}</span>
+        </div>
+      </div>
+
+      <!-- Diagipay Text -->
+      <p class="mt-4 text-center text-gray-500 text-sm">
+        Transaction was made with Datapaddy
+      </p>
+
+      <!-- Screenshot Notice -->
+      <p v-if="screenshotNotice" class="mt-2 text-center text-base text-green-700 font-semibold">
+        Kindly screenshot now
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 border-t" v-if="!screenshotNotice">
+      <button @click="shareReceipt"
+        class="flex items-center justify-center w-full py-3 rounded-lg font-semibold active:scale-95 transition"
+        :style="{ backgroundColor: 'var(--base-color)', color: '#fff' }">
+        <i data-lucide="share-2" class="w-5 h-5 mr-2"></i>
+        Share Receipt
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, onMounted } = Vue;
+
+createApp({
+  setup() {
+    const transactions = ref([]);
+    const selectedTx = ref(null);
+    const screenshotNotice = ref(false);
+
+    function formatMoney(num) {
+      if (!num) return "0.00";
+      const clean = num.toString().replace(/[^\d.-]/g, "");
+      return Number(clean).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function getLogo(title) {
+      const t = title ? title.toLowerCase() : "";
+      if (t.includes("mtn")) return "MTN.png";
+      if (t.includes("airtel")) return "AIRTEL.png";
+      if (t.includes("glo")) return "GLO.png";
+      if (t.includes("9mobile")) return "9MOBILE.png";
+      if (t.includes("dstv")) return "DStv.png";
+      if (t.includes("gotv")) return "Gotv.png";
+      if (t.includes("9psb")) return "9psb.png";
+      if (t.includes("palmpay")) return "palmpay.png";
+      if (t.includes("startime")) return "Startime.png";
+      return "other.png";
+    }
+
+    function statusClass(status) {
+      const s = status ? status.toLowerCase() : "";
+      if (s === "completed") return "text-green-500";
+      if (s === "pending") return "text-yellow-500";
+      if (s === "failed") return "text-red-500";
+      return "text-gray-500";
+    }
+
+    async function fetchTransactions() {
+      const token = localStorage.getItem("token");
+      if (!token) { window.location.href = "index.html"; return; }
+      try {
+        const res = await fetch("https://pulsepoint.com.ng/api/user/details", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + token, "Accept": "application/json" }
+        });
+        const data = await res.json();
+        if (data.transactions) {
+          transactions.value = data.transactions;
+        }
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+      }
+    }
+
+    function goBack() {
+      window.history.back();
+    }
+
+    function openReceipt(tx) {
+      selectedTx.value = tx;
+      screenshotNotice.value = false;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeReceipt() {
+      selectedTx.value = null;
+    }
+
+    async function copyTrx(trx) {
+      try {
+        await navigator.clipboard.writeText(trx);
+        // alert("TRX copied: " + trx); // removed alert
+      } catch (err) {
+        console.error("Failed to copy TRX:", err);
+      }
+    }
+
+    function shareReceipt() {
+      screenshotNotice.value = true;
+    }
+
+    onMounted(() => {
+      if (window.lucide) lucide.createIcons();
+      fetchTransactions();
+      setInterval(fetchTransactions, 10000);
+    });
+
+    return { transactions, selectedTx, screenshotNotice, formatMoney, getLogo, statusClass, goBack, openReceipt, closeReceipt, copyTrx, shareReceipt };
+  }
+}).mount('#app');
+</script>
+</body>
+          </html>
