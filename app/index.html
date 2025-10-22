@@ -4,12 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Platrlat - Sign In</title>
-
+<!-- PWA Essentials -->
+<link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0069ff">
+  <link rel="apple-touch-icon" href="/img/icon.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(() => console.log("✅ Service Worker Registered"))
+          .catch(err => console.error("SW Registration Failed:", err));
+      });
+    }
+</script>
 <!-- Toastify & Lucide -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
-
+<!-- Preloader -->
+<link rel="stylesheet" href="/assets/preloader.css">
 <style>
   body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; }
   .container { max-width:400px; margin:auto; padding:20px; }
