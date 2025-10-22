@@ -1,7 +1,7 @@
 const CACHE_NAME = "platrlat-cache-v1";
 const urlsToCache = [
   "/",
-  "/index.html",
+  "/app/index.html",
   "/assets/preloader.css",
   "/manifest.json"
 ];
