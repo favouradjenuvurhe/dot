@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Install Platrlat PWA on iOS</title>
+
+<!-- Icons & Toastify -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #fff;
+    color: #000;
+  }
+
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 25px 20px 90px;
+    text-align: center;
+  }
+
+  .logo {
+    font-weight: bold;
+    font-size: 22px;
+    color: #0069ff;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #222;
+  }
+
+  p.intro {
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+  }
+
+  /* --- Step Layout --- */
+  .step {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 35px;
+    gap: 15px;
+  }
+
+  .step:nth-child(even) {
+    flex-direction: row-reverse;
+  }
+
+  .step img {
+    width: 45%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+
+  .step-content {
+    width: 55%;
+    text-align: left;
+  }
+
+  .step:nth-child(even) .step-content {
+    text-align: right;
+  }
+
+  .step h3 {
+    font-size: 17px;
+    color: #0069ff;
+    margin-bottom: 6px;
+  }
+
+  .step p {
+    color: #444;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .note {
+    font-size: 13px;
+    color: #777;
+    margin-top: 15px;
+    text-align: center;
+  }
+
+  /* --- Button --- */
+  .btn {
+    background: #0069ff;
+    color: #fff;
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    border-radius: 0;
+    transition: background 0.3s;
+  }
+
+  .btn:hover {
+    background: #0050d6;
+  }
+
+  .icon {
+    color: #0069ff;
+    margin-bottom: 10px;
+  }
+
+  /* --- Responsive --- */
+  @media (max-width: 600px) {
+    .step {
+      flex-direction: column !important;
+      text-align: center !important;
+    }
+    .step img, .step-content {
+      width: 100%;
+      text-align: center !important;
+    }
+  }
+
+  /* Prevent selection */
+  body, img {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="logo">PLATRlat</div>
+    <i data-lucide="smartphone" class="icon" width="60" height="60"></i>
+    <h2>Install Platrlat on iOS</h2>
+    <p class="intro">Easily install Platrlat on your iPhone or iPad home screen to enjoy a full app experience right from Safari.</p>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <img src="https://i.imgur.com/WWwQzZB.png" alt="Safari browser open">
+      <div class="step-content">
+        <h3>Step 1</h3>
+        <p>Open Platrlat in your Safari browser.</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <img src="https://i.imgur.com/5M4sY3v.png" alt="Share button">
+      <div class="step-content">
+        <h3>Step 2</h3>
+        <p>Tap the <strong>Share</strong> button <i class="fa-solid fa-square-arrow-up"></i> at the bottom of your screen.</p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step">
+      <img src="https://i.imgur.com/3pTh6Xx.png" alt="Add to Home Screen Option">
+      <div class="step-content">
+        <h3>Step 3</h3>
+        <p>Scroll down and tap <strong>Add to Home Screen</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <img src="https://i.imgur.com/hUBnsLz.png" alt="Add confirmation">
+      <div class="step-content">
+        <h3>Step 4</h3>
+        <p>Tap <strong>Add</strong> in the top-right corner to finish. 🎉</p>
+      </div>
+    </div>
+
+    <p class="note">Once added, Platrlat will appear on your iOS home screen just like any other app.</p>
+  </div>
+
+  <button class="btn" onclick="window.location.href='login.html'">Install Now on Login Page</button>
+
+<script>
+if (window.lucide) lucide.createIcons();
+
+// Disable inspect / copy
+document.addEventListener('contextmenu', e => e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt => document.addEventListener(evt, e => e.preventDefault()));
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && ['u','s','a'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+</script>
+</body>
+</html>
