@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Face Verification</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root { --base-color: #c70404; }
+.bg-base { background-color: var(--base-color); }
+.text-base { color: var(--base-color); }
+.border-base { border-color: var(--base-color); }
+
+.face-circle {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid var(--base-color);
+  box-shadow: 0 0 30px rgba(199, 4, 4, 0.5);
+  position: relative;
+}
+.face-circle video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror for selfie view */
+}
+.scan-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(255,255,255,0.6);
+  animation: scan 2.5s linear infinite;
+}
+@keyframes scan {
+  0% { top: 0; }
+  50% { top: calc(100% - 4px); }
+  100% { top: 0; }
+}
+</style>
+</head>
+<body class="bg-white h-screen flex flex-col font-sans">
+
+<div id="app" class="flex flex-col h-full items-center justify-between py-8">
+
+  <!-- Header -->
+  <div class="flex items-center w-full px-4">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Face Verification</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Camera Area -->
+  <div class="flex-1 flex flex-col items-center justify-center gap-6">
+    <div class="relative face-circle">
+      <video ref="video" autoplay playsinline></video>
+      <div class="scan-line"></div>
+    </div>
+    <p class="text-gray-600 text-center px-8 text-sm">
+      Please align your face within the circle to verify your identity.
+    </p>
+  </div>
+
+  <!-- Capture Button -->
+  <div class="w-full px-6">
+    <button @click="capturePhoto" class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md flex items-center justify-center gap-2">
+      <i data-lucide="camera" class="w-5 h-5"></i>
+      Capture Face
+    </button>
+  </div>
+
+  <!-- Result Modal -->
+  <div v-if="showPreview" class="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-2xl shadow-lg w-80 text-center">
+      <img :src="photo" alt="Captured Face" class="w-48 h-48 rounded-full mx-auto object-cover border-4 border-base" />
+      <h2 class="text-lg font-semibold mt-4">Face Captured</h2>
+      <p class="text-gray-500 text-sm mb-4">Confirm if this photo is clear and centered.</p>
+      <div class="flex gap-3">
+        <button @click="retake" class="flex-1 py-2 rounded-lg border border-gray-300">Retake</button>
+        <button @click="submitPhoto" class="flex-1 py-2 rounded-lg bg-base text-white">Continue</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      showPreview: false,
+      photo: null,
+      videoStream: null,
+    };
+  },
+  mounted() {
+    lucide.createIcons();
+    this.startCamera();
+  },
+  methods: {
+    goBack() { window.history.back(); },
+
+    async startCamera() {
+      try {
+        this.videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        this.$refs.video.srcObject = this.videoStream;
+      } catch (err) {
+        alert("Unable to access camera. Please enable permissions.");
+      }
+    },
+
+    capturePhoto() {
+      const video = this.$refs.video;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(-1, 1); // mirror selfie
+      ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+      this.photo = canvas.toDataURL("image/png");
+      this.showPreview = true;
+    },
+
+    retake() {
+      this.showPreview = false;
+      this.photo = null;
+    },
+
+    submitPhoto() {
+      this.showPreview = false;
+      alert("Face captured successfully! (Send to API here)");
+      // Example: send to server
+      // fetch('/api/verify-face', { method:'POST', body: JSON.stringify({ image: this.photo }) })
+    }
+  }
+}).mount('#app');
+</script>
+
+</body>
+  </html>
