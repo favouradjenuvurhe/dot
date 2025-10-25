@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bank Transfer</title>
 
+<!-- Tailwind, Vue, Lucide, Toastify -->
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" />
 
 <style>
 :root { --base-color: #0069ff; }
@@ -73,7 +74,6 @@
 
 <body class="bg-white h-screen flex flex-col font-sans">
 <div id="app" class="flex flex-col h-full">
-
   <!-- Header -->
   <div class="flex items-center px-4 py-3 border-b">
     <button @click="goBack" class="p-2 rounded-full border border-gray-300">
@@ -85,19 +85,16 @@
 
   <!-- Main Content -->
   <div class="flex-1 overflow-y-auto px-4 mt-4 space-y-4">
-    
     <!-- Bank Search -->
-    <input type="text" v-model="search" placeholder="Search bank..." 
+    <input type="text" v-model="search" placeholder="Search bank..."
       class="w-full border rounded-lg px-3 py-3 outline-none transition focus:ring-2 focus:ring-base" />
+
     <!-- Scrollable Bank List -->
     <div class="bank-scroll mt-2">
       <div v-for="bank in filteredBanks" :key="bank.bankCode"
            :class="['bank-item', selectedBank && selectedBank.bankCode === bank.bankCode ? 'selected' : '']"
            @click="selectBank(bank)">
-        <img 
-          :src="bank.logo_url || backupLogo"
-          @error="onImageError($event)"
-        />
+        <img :src="bank.logo_url || backupLogo" @error="onImageError($event)" />
         <span>{{ bank.bankName }}</span>
       </div>
     </div>
@@ -112,9 +109,9 @@
       </svg>
     </div>
 
-    <!-- Account Name Display (as text only) -->
+    <!-- Account Name Display -->
     <transition name="fade">
-      <div v-if="accountName" 
+      <div v-if="accountName"
         class="rounded-lg px-3 py-3 bg-green-50 text-green-700 font-semibold text-left animate-fadeInUp animate-pulseOnce shadow-sm">
         {{ accountName }}
       </div>
@@ -122,15 +119,14 @@
 
     <!-- Amount -->
     <div class="border rounded-lg px-3">
-      <input type="number" placeholder="Amount (₦)" v-model="amount" 
+      <input type="number" placeholder="Amount (₦)" v-model="amount"
         class="flex-1 py-3 outline-none transition focus:ring-2 focus:ring-base" />
     </div>
-
   </div>
 
   <!-- Continue Button -->
   <div class="border-t bg-white p-4">
-    <button @click="proceedTransfer" 
+    <button @click="proceedTransfer"
       class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md hover:scale-[1.02] transition-transform">
       Continue
     </button>
@@ -144,7 +140,6 @@
     </svg>
     <p class="text-white text-lg font-medium animate-pulse">Processing...</p>
   </div>
-
 </div>
 
 <script>
@@ -171,8 +166,9 @@ createApp({
       );
     },
   },
-  mounted() {
+  async mounted() {
     lucide.createIcons();
+    await this.checkKYC(); // ✅ Check KYC first before loading banks
     this.getBanks();
   },
   methods: {
@@ -180,6 +176,33 @@ createApp({
 
     onImageError(e) {
       e.target.src = this.backupLogo;
+    },
+
+    // ✅ Only stay if kyc_status === 2, else redirect
+    async checkKYC() {
+      try {
+        const token = localStorage.getItem('user_token');
+        if (!token) {
+          this.toast('Session expired. Please log in.', 'error');
+          return window.location.href = '/login';
+        }
+
+        const res = await fetch('https://pulsepoint.com.ng/api/kyc-status', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+
+        if (!data.success || data.kyc_status !== 2) {
+          this.toast('Please complete your KYC verification.', 'error');
+          setTimeout(() => {
+            window.location.href = '/app/capture';
+          }, 1500);
+        }
+      } catch {
+        this.toast('Unable to verify KYC status', 'error');
+        setTimeout(() => window.location.href = '/app/capture', 1500);
+      }
     },
 
     async getBanks() {
