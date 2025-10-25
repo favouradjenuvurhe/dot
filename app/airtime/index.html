@@ -139,7 +139,7 @@ createApp({
   },
   mounted() { lucide.createIcons(); },
   methods: {
-    goBack() { if (!this.loading) window.location.href = 'home.html'; },
+    goBack() { if (!this.loading) window.location.href = '/app/dashboard'; },
     formatPhone() {
       let num = this.phone.replace(/\s+/g,'');
       if(num.startsWith('+234')) num = '0'+num.slice(4);
@@ -192,7 +192,7 @@ createApp({
 
         if(data.status === 'success') {
           this.pin='';
-          setTimeout(()=>{ window.location.href="success.html"; },1500);
+          setTimeout(()=>{ window.location.href="/app/success.html"; },1500);
         } else {
           this.clearPin();
         }
