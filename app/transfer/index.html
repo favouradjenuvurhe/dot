@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 
 <style>
-:root { --base-color: #c70404; }
+:root { --base-color: #0069ff; }
 .bg-base { background-color: var(--base-color); }
 .text-base { color: var(--base-color); }
 .border-base { border-color: var(--base-color); }
@@ -176,7 +176,7 @@ createApp({
     this.getBanks();
   },
   methods: {
-    goBack() { window.location.href = 'home.html'; },
+    goBack() { window.location.href = '/app/dashboard'; },
 
     onImageError(e) {
       e.target.src = this.backupLogo;
