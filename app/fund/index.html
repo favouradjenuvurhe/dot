@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fund Wallet</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<style>
+:root { --base-color: #01009C; }
+.bg-base { background-color: var(--base-color); }
+.text-base { color: var(--base-color); }
+.border-base { border-color: var(--base-color); }
+.hover\:bg-base:hover { background-color: var(--base-color); }
+
+.qr-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.6); display:flex;
+  justify-content:center; align-items:center; z-index:9999;
+  padding: 20px;
+}
+.qr-card {
+  background:white; border-radius:16px;
+  display:flex; flex-direction:column; align-items:center;
+  box-shadow:0 8px 30px rgba(0,0,0,0.4);
+  width: 90%; max-width: 400px;
+  height: 75%; /* 75% for balance */
+  padding: 24px;
+  position: relative;
+}
+.qr-card-header {
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.qr-close { 
+  position:absolute; top:14px; right:14px; cursor:pointer; 
+}
+#qrcode { margin-top: 0.5rem; }
+.qr-footer-links {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #1D4ED8;
+  display: flex; gap: 8px;
+}
+.qr-howto {
+  margin-top: auto;
+  font-size: 0.8rem;
+  text-align: center;
+  color: #6B7280;
+}
+.qr-howto-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+<div id="app" class="flex flex-col h-full">
+
+  <!-- Header -->
+  <div class="flex items-center px-4 py-3 border-b bg-white">
+    <button @click="goBack" class="p-2 rounded-full border border-gray-300">
+      <i data-lucide="arrow-left" class="w-5 h-5"></i>
+    </button>
+    <h1 class="flex-1 text-center font-semibold text-lg">Fund Wallet</h1>
+    <div class="w-8 h-8"></div>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-1 overflow-y-auto px-4 py-6">
+
+    <!-- Info Banner -->
+    <div class="flex items-center gap-2 rounded-xl bg-blue-100 px-3 py-2 mb-4">
+      <i data-lucide="info" class="h-4 w-4 text-blue-600"></i>
+      <p class="text-gray-800 text-xs font-medium">
+        <span v-if="account && account.statusAcct === 1">
+          Pay via mobile/internet banking, fees may apply. Virtual funding account.
+        </span>
+        <span v-else>
+          Virtual account temporarily unavailable. Please try again later.
+        </span>
+      </p>
+    </div>
+
+    <!-- Bank Transfer Card -->
+    <div class="bg-white rounded-2xl shadow p-4" v-if="account">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-full flex items-center justify-center bg-gray-100">
+            <i data-lucide="align-start-vertical" class="h-5 w-5 text-gray-700"></i>
+          </div>
+          <div>
+            <span class="font-semibold text-gray-900">Bank Transfer</span>
+            <p class="text-sm text-gray-500">Add funds via mobile or internet banking</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="h-5 w-5 text-gray-400"></i>
+      </div>
+
+      <div class="border-t border-dashed border-gray-200 my-4"></div>
+
+      <!-- Account Number -->
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500">Account Number</p>
+        <div class="flex items-center justify-between">
+          <p class="text-3xl font-bold tracking-wide text-gray-900">{{ account.acctNum || 'Unavailable' }}</p>
+          <button v-if="account.statusAcct === 1"
+            @click="copyText(account.acctNum)"
+            class="ml-3 inline-flex items-center justify-center h-9 w-9 rounded-full bg-gray-200 hover:bg-gray-300"
+            aria-label="Copy account number"
+            title="Copy">
+            <i data-lucide="copy" class="h-4 w-4 text-gray-700"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Name -->
+      <div class="mt-3 space-y-1">
+        <p class="text-sm text-gray-500">Account Name</p>
+        <p class="text-base font-semibold text-gray-900">{{ account.acctName }}</p>
+      </div>
+
+      <!-- Bank Name -->
+      <div class="mt-3 space-y-1">
+        <p class="text-sm text-gray-500">Bank Name</p>
+        <p class="text-base font-semibold text-gray-900">{{ account.bankName }}</p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3 mt-5" v-if="account.statusAcct === 1">
+        <button @click="copyText(account.acctNum)"
+          class="flex-1 h-11 rounded-full bg-gray-100 text-gray-800 font-medium active:scale-[0.98] transition">
+          Copy Number
+        </button>
+        <button @click="showQRCode"
+          class="flex-1 h-11 rounded-full text-white font-medium active:scale-[0.98] transition bg-base">
+          QR Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Overlay -->
+  <div v-if="qrVisible" class="qr-overlay" @click.self="closeQR">
+    <div class="qr-card">
+      <i @click="closeQR" class="qr-close" data-lucide="x" style="width:24px;height:24px;"></i>
+      <h2 class="qr-card-header">My QR Code</h2>
+      
+      <!-- QR Image -->
+      <div id="qrcode"></div>
+      
+      <!-- Instruction -->
+      <p class="mt-4 font-medium text-gray-700">Use Datapaddy Scan to pay me</p>
+      
+      <!-- Links -->
+      <div class="qr-footer-links">
+        <span>Enter the amount</span>
+        <span>|</span>
+        <span>Save the picture</span>
+      </div>
+      
+      <!-- How to use -->
+      <div class="qr-howto mt-6">
+        <p class="qr-howto-title">How to use?</p>
+        <p>Visit the nearest Datapaddy User/Merchant and ask them<br>
+           to scan your QR code with their Datapaddy app or POS</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp } = Vue;
+
+createApp({
+  data() {
+    return {
+      account: null,
+      qrVisible: false
+    };
+  },
+  mounted() {
+    lucide.createIcons({ addClass: 'lucide' });
+
+    const saved = localStorage.getItem('account');
+    const savedTime = localStorage.getItem('accountTime');
+    const now = new Date().getTime();
+
+    if(saved && savedTime && now - savedTime < 30*60*1000){
+      this.account = JSON.parse(saved);
+    } else {
+      this.updateAccountStorage();
+    }
+
+    setInterval(() => this.updateAccountStorage(), 30*60*1000);
+  },
+  methods: {
+    goBack() { window.location.href = 'home.html'; },
+
+    async updateAccountStorage() {
+      const token = localStorage.getItem('token') || '';
+      try {
+        const res = await fetch("https://datapaddy.com.ng/api/virtual-account", {
+          method: "GET",
+          headers: { "Authorization": "Bearer " + token, "Accept": "application/json" }
+        });
+        const data = await res.json();
+        if(data.status) {
+          this.account = data.data;
+          localStorage.setItem('account', JSON.stringify(data.data));
+          localStorage.setItem('accountTime', new Date().getTime());
+          // this.toast("Account updated successfully", "success"); <-- REMOVED
+        } else {
+          this.toast("Unable to fetch account", "error");
+        }
+      } catch {
+        this.toast("Network error", "error");
+      }
+    },
+
+    copyText(text) {
+      navigator.clipboard.writeText(text);
+      this.toast("Copied to clipboard", "success");
+    },
+
+    showQRCode() {
+      if(!this.account) {
+        this.toast("No account available", "error");
+        return;
+      }
+
+      this.qrVisible = true;
+      this.$nextTick(() => {
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = ''; // clear previous
+        new QRCode(qrContainer, {
+          text: this.account.acctNum,
+          width: 220,
+          height: 220,
+          colorDark: "#1D4ED8",
+          colorLight: "#ffffff",
+        });
+      });
+    },
+
+    closeQR() { this.qrVisible = false; },
+
+    toast(msg,type){
+      const bg = type==='success'?'green':'red';
+      Toastify({ text: msg, duration:3000, gravity:"top", position:"center", close:true, backgroundColor:bg }).showToast();
+    }
+  }
+}).mount("#app");
+</script>
+</body>
+</html>
