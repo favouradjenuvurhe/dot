@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transaction Successful</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  body { 
+    font-family: 'Inter', sans-serif; 
+    margin:0; 
+    background-color: #ffffff; 
+    overflow-x: hidden; 
+  }
+
+  /* Confetti pieces */
+  .confetti-piece {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    opacity: 0.9;
+    transform-origin: center;
+    animation: fall 2s linear infinite;
+  }
+  @keyframes fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(800px) rotate(360deg); opacity: 0; }
+  }
+
+  /* Bounce-in animation */
+  .bounce-in { animation: bounceIn 0.6s ease-out; }
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+
+  /* Button hover effect */
+  .btn-hover:hover { opacity: 0.9; transform: scale(0.98); transition: all 0.2s; }
+</style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center relative text-gray-800">
+
+<!-- Confetti -->
+<div id="confetti-container"></div>
+
+<!-- Full-page Success Container -->
+<div class="flex flex-col items-center justify-center h-full w-full bounce-in px-6 text-center">
+  <i data-lucide="check-circle" class="w-24 h-24 text-green-500 mb-6"></i>
+  <h1 class="text-2xl font-bold mb-4 text-gray-900">Transaction successful!!🎉</h1>
+  <p class="text-lg text-gray-600 mb-8">Your transaction has been completed successfully.</p>
+
+  <!-- Buttons -->
+  <div class="flex flex-col gap-4 w-full max-w-xs">
+    <button onclick="goHome()" class="py-4 bg-green-500 text-white rounded-xl font-semibold btn-hover">DONE</button>
+    <button onclick="reportService()" class="py-4 border border-green-500 text-green-500 rounded-xl font-semibold btn-hover">REPORT</button>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  // Go Home
+  function goHome() {
+    window.location.href = '/app/dashboard';
+  }
+
+  // Report placeholder
+  function reportService() {
+    alert('Report submitted!');
+  }
+
+  // Confetti effect
+  const container = document.getElementById('confetti-container');
+  for(let i=0;i<100;i++){
+    const confetti = document.createElement('div');
+    confetti.classList.add('confetti-piece');
+    confetti.style.left = Math.random()*100 + 'vw';
+    confetti.style.backgroundColor = `hsl(${Math.random()*360}, 80%, 60%)`;
+    confetti.style.animationDelay = (Math.random()*2)+'s';
+    confetti.style.width = confetti.style.height = (Math.random()*8+4)+'px';
+    container.appendChild(confetti);
+  }
+</script>
+
+</body>
+</html>
