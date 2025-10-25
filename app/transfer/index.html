@@ -74,6 +74,7 @@
 
 <body class="bg-white h-screen flex flex-col font-sans">
 <div id="app" class="flex flex-col h-full">
+
   <!-- Header -->
   <div class="flex items-center px-4 py-3 border-b">
     <button @click="goBack" class="p-2 rounded-full border border-gray-300">
@@ -85,6 +86,7 @@
 
   <!-- Main Content -->
   <div class="flex-1 overflow-y-auto px-4 mt-4 space-y-4">
+
     <!-- Bank Search -->
     <input type="text" v-model="search" placeholder="Search bank..."
       class="w-full border rounded-lg px-3 py-3 outline-none transition focus:ring-2 focus:ring-base" />
@@ -122,17 +124,36 @@
       <input type="number" placeholder="Amount (₦)" v-model="amount"
         class="flex-1 py-3 outline-none transition focus:ring-2 focus:ring-base" />
     </div>
+
   </div>
 
   <!-- Continue Button -->
   <div class="border-t bg-white p-4">
-    <button @click="proceedTransfer"
-      class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md hover:scale-[1.02] transition-transform">
+    <button @click="openPin" class="w-full py-3 bg-base text-white rounded-lg font-medium text-lg shadow-md hover:scale-[1.02] transition-transform">
       Continue
     </button>
   </div>
 
-  <!-- Loader Overlay -->
+  <!-- PIN Modal -->
+  <div v-if="showPin" class="fixed inset-0 bg-black bg-opacity-50 flex items-end z-50">
+    <div class="bg-white w-full h-3/4 rounded-t-2xl p-6 animate-fadeInUp flex flex-col relative">
+      <button @click="showPin=false; pin=''" class="absolute top-4 right-4 p-2 rounded-full bg-gray-200">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+      <h2 class="text-lg font-semibold text-center mb-4">Enter 4-Digit PIN</h2>
+      <div class="flex justify-center mb-6">
+        <div class="text-3xl tracking-widest">{{ '•'.repeat(pin.length) }}</div>
+      </div>
+      <div class="grid grid-cols-3 gap-6 flex-1 place-items-center">
+        <button v-for="n in 9" :key="n" @click="enterDigit(n)" class="w-16 h-16 flex items-center justify-center rounded-full border text-xl font-semibold">{{ n }}</button>
+        <button @click="deleteDigit" class="w-16 h-16 flex items-center justify-center rounded-full border text-xl">⌫</button>
+        <button @click="enterDigit(0)" class="w-16 h-16 flex items-center justify-center rounded-full border text-xl">0</button>
+        <button @click="clearPin" class="w-16 h-16 flex items-center justify-center rounded-full border text-sm">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loader -->
   <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-70 flex flex-col items-center justify-center z-[60]">
     <svg class="animate-spin h-12 w-12 text-white mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -140,142 +161,183 @@
     </svg>
     <p class="text-white text-lg font-medium animate-pulse">Processing...</p>
   </div>
+
 </div>
 
 <script>
 const { createApp } = Vue;
 
 createApp({
-  data() {
-    return {
-      banks: [],
-      search: '',
-      selectedBank: null,
-      accountNumber: '',
-      accountName: '',
-      verifying: false,
-      amount: '',
-      loading: false,
-      backupLogo: "https://firebasestorage.googleapis.com/v0/b/business-banking-93cc1.appspot.com/o/bankLogos%2FEmpty%20Bank%20Logo.png?alt=media&token=c800752e-e3f0-41cf-a4bc-de2d4017ca16"
+data() {
+return {
+  banks: [],
+  search: '',
+  selectedBank: null,
+  accountNumber: '',
+  accountName: '',
+  verifying: false,
+  amount: '',
+  loading: false,
+  showPin: false,
+  pin: '',
+  backupLogo: "https://firebasestorage.googleapis.com/v0/b/business-banking-93cc1.appspot.com/o/bankLogos%2FEmpty%20Bank%20Logo.png?alt=media&token=c800752e-e3f0-41cf-a4bc-de2d4017ca16"
+};
+},
+computed: {
+filteredBanks() {
+  return this.banks.filter(b =>
+    b.bankName.toLowerCase().includes(this.search.toLowerCase())
+  );
+}
+},
+async mounted() {
+  lucide.createIcons();
+  await this.checkKYC();
+  this.getBanks();
+},
+methods: {
+goBack() { window.location.href = '/app/dashboard'; },
+onImageError(e) { e.target.src = this.backupLogo; },
+
+async checkKYC() {
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('https://pulsepoint.com.ng/api/kyc-status', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!data.success || data.kyc_status !== 2) {
+      this.toast('Please complete your KYC verification.', 'error');
+      setTimeout(()=>window.location.href='/app/capture',1500);
+    }
+  } catch {
+    this.toast('Unable to verify KYC status', 'error');
+  }
+},
+
+async getBanks() {
+  try {
+    const res = await fetch('https://pulsepoint.com.ng/api/banklist');
+    const data = await res.json();
+    this.banks = data.data || data.body?.banks || [];
+  } catch {
+    this.toast('Network error loading banks', 'error');
+  }
+},
+
+selectBank(bank) { this.selectedBank = bank; },
+
+async handleAccountInput() {
+  if (this.accountNumber.length === 10 && this.selectedBank) {
+    this.verifying = true;
+    try {
+      const res = await fetch('https://pulsepoint.com.ng/api/verify-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bankCode: this.selectedBank.bankCode, accountNumber: this.accountNumber }),
+      });
+      const data = await res.json();
+      const result = data.body || data;
+      this.accountName = result.content?.accountName || '';
+    } catch {
+      this.toast('Network error verifying account', 'error');
+    } finally {
+      this.verifying = false;
+    }
+  }
+},
+
+openPin() {
+  if (!this.selectedBank) return this.toast('Select a bank', 'error');
+  if (!this.accountNumber || this.accountNumber.length < 10) return this.toast('Enter valid account number', 'error');
+  if (!this.amount || this.amount <= 0) return this.toast('Enter valid amount', 'error');
+  if (!this.accountName) return this.toast('Verify account first', 'error');
+  this.showPin = true;
+},
+
+enterDigit(n) {
+  if (this.pin.length < 4) {
+    this.pin += n;
+    if (this.pin.length === 4) {
+      this.showPin = false;
+      this.verifyPinAndTransfer();
+    }
+  }
+},
+deleteDigit() { this.pin = this.pin.slice(0, -1); },
+clearPin() { this.pin = ''; },
+
+async verifyPinAndTransfer() {
+  this.loading = true;
+  const token = localStorage.getItem('token');
+  try {
+    // 1️⃣ Verify PIN
+    const pinRes = await fetch('https://your-domain.com/api/check-transaction-pin', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ pin: this.pin })
+    });
+    const pinData = await pinRes.json();
+
+    if (!pinData.success) {
+      this.loading = false;
+      return this.toast('Invalid transaction PIN', 'error');
+    }
+
+    // 2️⃣ On success, send payout
+    const payoutPayload = {
+      amount: this.amount,
+      clientRef: "BANK_" + Date.now(),
+      accountNumber: this.accountNumber,
+      bankCode: this.selectedBank.bankCode,
+      bankName: this.selectedBank.bankName,
+      narration: "Bank Transfer",
+      accountReference: "REF_" + Math.random().toString(36).substring(2,10)
     };
-  },
-  computed: {
-    filteredBanks() {
-      return this.banks.filter(b =>
-        b.bankName.toLowerCase().includes(this.search.toLowerCase())
-      );
-    },
-  },
-  async mounted() {
-    lucide.createIcons();
-    await this.checkKYC(); // ✅ Check KYC first before loading banks
-    this.getBanks();
-  },
-  methods: {
-    goBack() { window.location.href = '/app/dashboard'; },
 
-    onImageError(e) {
-      e.target.src = this.backupLogo;
-    },
+    const payRes = await fetch('https://pulsepoint.com.ng/api/pay-out', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payoutPayload)
+    });
 
-    // ✅ Only stay if kyc_status === 2, else redirect
-    async checkKYC() {
-      try {
-        const token = localStorage.getItem('user_token');
-        if (!token) {
-          this.toast('Session expired. Please log in.', 'error');
-          return window.location.href = '/login';
-        }
+    const payData = await payRes.json();
+    const status = payData.status || payData.data?.status || 'error';
+    const msg = payData.message || 'Transfer completed';
 
-        const res = await fetch('https://pulsepoint.com.ng/api/kyc-status', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+    const toastType = status === 'success' ? 'success' : (status === 'pending' ? 'warning' : 'error');
+    this.toast(msg, toastType);
 
-        const data = await res.json();
+    if (status === 'success') {
+      setTimeout(()=>window.location.href="/app/success.html", 1500);
+    }
 
-        if (!data.success || data.kyc_status !== 2) {
-          this.toast('Please complete your KYC verification.', 'error');
-          setTimeout(() => {
-            window.location.href = '/app/capture';
-          }, 1500);
-        }
-      } catch {
-        this.toast('Unable to verify KYC status', 'error');
-        setTimeout(() => window.location.href = '/app/capture', 1500);
-      }
-    },
+  } catch (e) {
+    this.toast('Network error during transfer', 'error');
+  } finally {
+    this.loading = false;
+    this.pin = '';
+  }
+},
 
-    async getBanks() {
-      try {
-        const res = await fetch('https://pulsepoint.com.ng/api/banklist');
-        const data = await res.json();
-        if (data.ok || data.status === 'success') {
-          this.banks = data.data || data.body?.banks || [];
-        } else {
-          this.toast('Failed to load banks', 'error');
-        }
-      } catch {
-        this.toast('Network error loading banks', 'error');
-      }
-    },
-
-    selectBank(bank) {
-      this.selectedBank = bank;
-    },
-
-    async handleAccountInput() {
-      if (this.accountNumber.length === 10 && this.selectedBank) {
-        this.verifying = true;
-        this.accountName = '';
-
-        try {
-          const res = await fetch('https://pulsepoint.com.ng/api/verify-account', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bankCode: this.selectedBank.bankCode,
-              accountNumber: this.accountNumber,
-            }),
-          });
-
-          const data = await res.json();
-          const result = data.body || data;
-
-          if ((result.ok && result.status === 'success') && result.content?.accountName) {
-            this.accountName = result.content.accountName;
-          } else {
-            this.accountName = '';
-            this.toast('❌ Invalid account or not found', 'error');
-          }
-        } catch {
-          this.toast('Network error verifying account', 'error');
-        } finally {
-          this.verifying = false;
-        }
-      } else {
-        this.accountName = '';
-      }
-    },
-
-    proceedTransfer() {
-      if (!this.selectedBank) return this.toast('Select a bank', 'error');
-      if (!this.accountNumber || this.accountNumber.length < 10) return this.toast('Enter valid account number', 'error');
-      if (!this.amount || this.amount <= 0) return this.toast('Enter valid amount', 'error');
-      this.toast('Ready to transfer', 'success');
-    },
-
-    toast(msg, type) {
-      const bg = type === 'success' ? '#16a34a' : '#dc2626';
-      Toastify({
-        text: msg,
-        duration: 3000,
-        gravity: 'top',
-        position: 'center',
-        close: true,
-        backgroundColor: bg,
-      }).showToast();
-    },
-  },
+toast(msg, type) {
+  const bg = type === 'success' ? 'green' : type === 'warning' ? 'orange' : 'red';
+  Toastify({
+    text: msg,
+    duration: 3000,
+    gravity: 'top',
+    position: 'center',
+    close: true,
+    backgroundColor: bg
+  }).showToast();
+}
+}
 }).mount('#app');
 </script>
 </body>
