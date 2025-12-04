@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platrlat - Sign In</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0069ff">
+<link rel="apple-touch-icon" href="/img/icon.png">
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log("✅ Service Worker Registered"))
+      .catch(err => console.error("SW Registration Failed:", err));
+  });
+}
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link rel="stylesheet" href="/assets/preloader.css">
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+body { margin:0; font-family:'Segoe UI', sans-serif; background:#fff; color:#000; }
+.container { max-width:400px; margin:auto; padding:20px; }
+h1 { font-size:32px; margin-bottom:25px; }
+label { font-size:14px; margin-bottom:6px; display:block; color:#333; }
+.input-group { position:relative; margin-bottom:20px; }
+.input-group svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:#0069ff; width:18px; height:18px; }
+.input-group input { width:100%; padding:12px 40px; border-radius:8px; border:1px solid #ccc; background:#f9f9f9; color:#000; font-size:14px; box-sizing:border-box; }
+.btn { padding:14px; font-size:16px; border-radius:8px; border:none; cursor:pointer; box-sizing:border-box; width:100%; margin-bottom:10px; transition:0.3s; }
+.btn-signin { background:#0069ff; color:#fff; font-weight:bold; }
+.btn-signin:disabled { opacity:0.6; cursor:not-allowed; }
+.btn-contact, .btn-create { background:#eee; color:#000; border:1px solid #ccc; }
+.signup-text { text-align:center; font-size:14px; margin:15px 0 10px; color:#333; cursor:pointer; }
+</style>
+</head><body>
+<div class="container" id="loginContainer">
+  <h1>Sign in</h1><label for="email">Email</label>
+
+  <div class="input-group">
+    <i data-lucide="mail"></i>
+    <input type="text" id="username" placeholder="you@example.com">
+  </div><label for="password">Password</label>
+
+  <div class="input-group">
+    <i data-lucide="lock"></i>
+    <input type="password" id="password" placeholder="********">
+  </div>  <div class="forgot-pass" onclick="window.location.href='forget-password'" style="color:#0069ff; font-size:13px; cursor:pointer;">Forgot password?</div>
+  <br><button class="btn btn-signin" id="signinBtn" onclick="loginUser()">Sign in</button>
+<button class="btn btn-contact" onclick="window.location.href='support-page'">Contact us</button>
+
+  <div class="signup-text" onclick="window.location.href='create.html'">Sign up if you do not have an account with us</div>
+  <button class="btn btn-create" onclick="window.location.href='create-account'">Create a free account</button>
+</div><script>
+if (window.lucide) lucide.createIcons();
+
+// Redirect if already logged in
+document.addEventListener("DOMContentLoaded", () => {
+  const existingToken = localStorage.getItem("token");
+  if (existingToken) {
+    window.location.replace("/app/dashboard");
+    return;
+  }
+});
+
+// Toastify helper
+function showToast(message, type = "info") {
+  let bgColor = "#333", icon = "info";
+  if (type === "success") { bgColor = "#16a34a"; icon = "check-circle"; }
+  if (type === "error") { bgColor = "#dc2626"; icon = "alert-circle"; }
+  if (type === "info") { bgColor = "#2563eb"; icon = "info"; }
+
+  const el = document.createElement("div");
+  el.className = "flex items-center space-x-2 text-white";
+  el.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i><span>${message}</span>`;
+  if (window.lucide) lucide.createIcons({ icons: [icon] });
+
+  Toastify({ node: el, duration: 3000, gravity: "top", position: "center", close: false, stopOnFocus: true,
+    style: { background: bgColor, borderRadius: "10px", boxShadow: "0 2px 10px rgba(0,0,0,0.15)", padding: "10px 16px" }
+  }).showToast();
+}
+
+// Login function using WP AJAX
+function loginUser() {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const signinBtn = document.getElementById("signinBtn");
+
+  if (!navigator.onLine) { showToast("No Internet Connection", "error"); return; }
+  if (!username || !password) { showToast("Please enter both username and password.", "error"); return; }
+
+  signinBtn.textContent = "Logging in...";
+  signinBtn.disabled = true;
+
+  // Build form-urlencoded body
+  const formData = new URLSearchParams();
+  formData.append("action", "pulsepoint_user_login");
+  formData.append("email", username);
+  formData.append("password", password);
+
+  fetch("https://noteware.name.ng/wp-admin/admin-ajax.php", {
+    method: "POST",
+    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    body: formData.toString()
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      localStorage.setItem("token", "wordpress_session"); // Placeholder token
+      localStorage.setItem("user", JSON.stringify(data.user));
+      showToast(data.message || "Login successful", "success");
+      setTimeout(() => window.location.href = "/app/dashboard", 800);
+    } else {
+      signinBtn.textContent = "Sign in";
+      signinBtn.disabled = false;
+      showToast(data.message || "Login failed", "error");
+    }
+  })
+  .catch(err => {
+    signinBtn.textContent = "Sign in";
+    signinBtn.disabled = false;
+    showToast("Error: " + err.message, "error");
+  });
+}
+
+// Disable inspect / copy
+document.addEventListener('contextmenu', e => e.preventDefault());
+['copy','cut','paste','selectstart'].forEach(evt => document.addEventListener(evt, e => e.preventDefault()));
+document.addEventListener('keydown', e => { if (e.ctrlKey && ['u','s','a'].includes(e.key.toLowerCase())) e.preventDefault(); });
+</script></body>
+</html>
